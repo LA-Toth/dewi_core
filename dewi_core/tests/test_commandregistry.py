@@ -3,7 +3,7 @@
 
 import argparse
 
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.command import Command
 from dewi_core.commandregistry import CommandRegistry, CommandRegistryException, ClassDescriptor, \
     ClassDescriptorWithModuleName, \
@@ -31,7 +31,7 @@ class test_commandregistry:  # pylint: disable=C0103
 command_class = Command2  # pylint: disable=C0103
 
 
-class CommandRegistryTest(dewi_core.tests.TestCase):
+class CommandRegistryTest(dewi_core.testcase.TestCase):
 
     def set_up(self):
         self.tested = CommandRegistry()
@@ -121,7 +121,7 @@ class CommandRegistryTest(dewi_core.tests.TestCase):
         self.assert_raises(ClassIsNotSubclassOfCommand, ClassDescriptorWithConcreteClass, LocalCommand)
 
 
-class TestCommandRegistrar(dewi_core.tests.TestCase):
+class TestCommandRegistrar(dewi_core.testcase.TestCase):
 
     def set_up(self):
         self._registry = CommandRegistry()

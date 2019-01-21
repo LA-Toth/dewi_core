@@ -1,11 +1,10 @@
 # Copyright 2015-2019 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
-
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.loader.context import Context, ContextEntryNotFound, ContextEntryAlreadyRegistered
 
 
-class ContextTest(dewi_core.tests.TestCase):
+class ContextTest(dewi_core.testcase.TestCase):
     def set_up(self):
         self.context = Context()
 

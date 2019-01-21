@@ -7,14 +7,13 @@ import sys
 import traceback
 import typing
 
-from dewi_core.utils.levenstein import get_similar_names_to
-
 from dewi_core.command import Command
 from dewi_core.commandregistry import CommandRegistry
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.loader.plugin import Plugin
 from dewi_core.logger import create_logger, LoggerType, LogLevel, log_debug
+from dewi_core.utils.levenstein import get_similar_names_to
 
 
 class EmptyPlugin(Plugin):

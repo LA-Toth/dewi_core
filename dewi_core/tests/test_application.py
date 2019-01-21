@@ -3,12 +3,12 @@
 
 import argparse
 
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.application import MainApplication
 from dewi_core.command import Command
+from dewi_core.context_managers import redirect_outputs
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader
-from dewi_core.tests import redirect_outputs
 
 
 class FakeCommand(Command):
@@ -48,7 +48,7 @@ class FakePluginLoader(PluginLoader):
         return context
 
 
-class TestMainApplication(dewi_core.tests.TestCase):
+class TestMainApplication(dewi_core.testcase.TestCase):
     def set_up(self):
         self.command = FakeCommand()
         self.loader = FakePluginLoader(FakeCommand)

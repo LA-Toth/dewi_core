@@ -1,11 +1,10 @@
 # Copyright 2016-2019 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
-
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.config.config import Config, InvalidEntry
 
 
-class ConfigTest(dewi_core.tests.TestCase):
+class ConfigTest(dewi_core.testcase.TestCase):
     def set_up(self):
         self.tested = Config()
 

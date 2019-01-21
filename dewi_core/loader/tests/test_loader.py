@@ -3,7 +3,7 @@
 
 import collections
 
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader, PluginLoaderError
 from dewi_core.loader.plugin import Plugin
@@ -93,7 +93,7 @@ class TestPluginO2(Plugin):
         c.register('pluginO2', 2242)
 
 
-class TestLoader(dewi_core.tests.TestCase):
+class TestLoader(dewi_core.testcase.TestCase):
     def set_up(self):
         self.loader = PluginLoader()
 

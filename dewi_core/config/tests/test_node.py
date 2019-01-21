@@ -5,7 +5,7 @@ import typing
 
 import yaml
 
-import dewi_core.tests
+import dewi_core.testcase
 from dewi_core.config.node import Node, NodeList
 
 
@@ -35,7 +35,7 @@ title: null
 """
 
 
-class NodeAndNodeListTest(dewi_core.tests.TestCase):
+class NodeAndNodeListTest(dewi_core.testcase.TestCase):
     def set_up(self):
         self.tested = N2()
         self.tested.members.append(N1())

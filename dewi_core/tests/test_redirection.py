@@ -5,11 +5,11 @@
 import io
 import sys
 
-import dewi_core.tests
-from dewi_core.tests import redirect_outputs
+import dewi_core.testcase
+from dewi_core.context_managers import redirect_outputs
 
 
-class TestRedirection(dewi_core.tests.TestCase):
+class TestRedirection(dewi_core.testcase.TestCase):
     def test_can_capture_printing_during_test(self):
         with redirect_outputs() as output:
             print("Hello stdout!")
