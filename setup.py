@@ -32,7 +32,7 @@ setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
     license="LGPLv3",
-    version="1.5",
+    version="2.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",
@@ -60,7 +60,7 @@ setup(
     zip_safe=True,
     use_2to3=False,
     python_requires='>=3.6',
-    packages=find_packages(exclude=['*test*']) + ['dewi_core.tests'],
+    packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     requires=[
         'pyyaml',
     ]

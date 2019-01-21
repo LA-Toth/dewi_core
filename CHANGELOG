@@ -1,3 +1,14 @@
+2.0
+  - !!! DEWI goes into multiple repositories and packages
+  - use only 'protected' members with single leading underscore ('_')
+  - MainApplication: argparse.Namespace object's 'protected', custom
+    members end with '_' instead of leading '_', as they are touched
+    from MainApplication and can be read anywhere
+  - Plugin: add '_r()' for simpler command registration,
+    removed default depenency - it's empty list
+  - Keep logger, config, plugin, and MainApplication classes with their
+    dependencies, others are in different packages
+
 1.5
   - MainApplication: --debug implies --log-level debug
     default log level: info
