@@ -1,5 +1,5 @@
-DEWI: A developer tool and framework
-====================================
+DEWI core: A plugin and typesafe config tree framework
+======================================================
 
 Name
 ----
@@ -12,12 +12,16 @@ original name, which stands for Developer's Work Area.
 Purpose
 -------
 
-As the name implies the original purpose was to add tools - commands - helping
-product development.
+This code is the minimal core part of DEWI_.
 
-Now it is my toolchain written in Python, and it can be used for several different
-tasks, such as edit files or sync file source to a remote location, manage photos
-or images, and finally it is a framework of other unpublished codes.
+.. _DEWI: https://github.com/LA-Toth/DEWI
+
+The plugins ensure load codes dynamically, without loading everything.
+An application implementation is also added in ``MainApplication`` class.
+
+The other functionality is the config tree, which is a tree of MutableMapping nodes
+with further improvements.  The class is called as ``Node``. A generic helper
+class is also added called as ``config``.
 
 
 Installation
@@ -29,47 +33,11 @@ It can be installed from source::
 
 Or from pip::
 
-        pip install dewi
-
-
-Usage as a command-line tool
-----------------------------
-
-Common usage
-~~~~~~~~~~~~
-
-To print its help::
-
-        dewi -h
-
-To print commands with their descriptions::
-
-        dewi
-        dewi list
-
-To print commands with their aliases and descriptions::
-
-        dewi list-all
-
-An example: I want to open ~/.ssh/known_hosts at line 123, and it's
-listed on the console as ~/.ssh/known_hosts:123. After copy-paste::
-
-        dewi edit ~/.ssh/known_hosts:123
-
-And it starts `vim` with arguments `~/.ssh/known_hosts +123`
-
-
-Run commands from specific plugin(s)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-There is an example plugin in file ``dewi/commands/sample.py``, and a command.
-This command doesn't do too much, simply exits with exit status `42`::
-
-        dewi -p dewi.commands.sample.SamplePlugin sample
+        pip install dewi_core
 
 
 Usage as a plugin framework
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 A minimal example can be found in the ``samples/as_framework`` directory,
 the application is named as Steven.
@@ -84,8 +52,8 @@ The exact plugin can be hidden if there is a main entry point or script:
 .. code-block:: python
 
     #!/usr/bin/env python3
-    from dewi.core.application import MainApplication
-    from dewi.loader.loader import PluginLoader
+    from dewi_core.application import MainApplication
+    from dewi_core.loader.loader import PluginLoader
 
 
     def main():
@@ -108,8 +76,8 @@ boilerplate. A simple example is creating a somewhat typesafe (config) tree:
 
 .. code-block:: python
 
-    from dewi.config.config import Config
-    from dewi.config.node import Node
+    from dewi_core.config.config import Config
+    from dewi_core.config.node import Node
 
 
     class Hardware(Node):
@@ -153,38 +121,3 @@ boilerplate. A simple example is creating a somewhat typesafe (config) tree:
 
 As you can see, DEWI can be used as library, and it can contain slightly different
 solutions of the same problem.
-
-
-NOTE: As DEWI uses logging since v1.4, any program that depends on it must either use
-the ``MainApplication`` as an entry point or run at least the following statements::
-
-    from dewi.core.logger import create_logger, LoggerType
-
-    create_logger('anything', LoggerType.None, 'info')
-
-
-
-Current features
-----------------
-
-* Plugin and command frameworks
-* A configuration tree which is a smart dict, ``Config``, in ``dewi.config.config``
-* A typesafe tree node for config tree, ``Node``, in ``dewi.config.node``
-* Processing files from a directory subtree by modules in ``dewi.module_framework.module``
-* Message / Messages classes for module framework in ``dewi.module_framework.messages``
-* Log event processing module base based on the module framework in ``dewi.logparser.loghandler``
-* Log file processing class, ``LogHandlerModule`` also in ``dewi.logparser.loghandler``
-* Realtime sync framework in ``dewi.realtime_sync`` with ``filesync`` command
-* Commands for collecting and sorting images (photos)
-* Generating Munin graphs from a ``munin`` directory (e.g. copied ``/var/lib/munin/``)
-  in ``dewi.rrdtool.rrdtool``
-* Modules for
-   * Unpack archives - currently only .zip files - in ``dewi.utils.archives``
-   * Kayako REST API in ``dewi.utils.kayako_rest``
-   * Calculating Levenstein distance and filter a list based on it in ``dewi.utils.levenstein``
-   * network card vendor lookup in ``dewi.utils.network``
-   * Converting XML to a dict in ``dewi.utils.xml``
-   * Looking up of executable binaries in ``dewi.utils.process``
-   * enhancing dicts in ``dewi.utils.dictionaries``
-   * Events in a lithurgical year (Hungarian Lutheran) in ``dewi.utils.lithurgical``
-   * Write a dict into an output file or stdout in ``dewi.utils.yaml``
