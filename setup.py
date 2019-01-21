@@ -61,7 +61,7 @@ setup(
     use_2to3=False,
     python_requires='>=3.6',
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
-    requires=[
+    install_requires=[
         'pyyaml',
     ]
 )
