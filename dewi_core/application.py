@@ -85,18 +85,23 @@ class ListCommand(Command):
 
 class MainApplication:
     def __init__(self, loader: PluginLoader, program_name: str, *,
-                 fallback_to_plugin_name: typing.Optional[str] = None):
+                 fallback_to_plugin_name: typing.Optional[str] = None,
+                 disable_plugins_from_cmdline: typing.Optional[bool] = None):
         self._loader = loader
         self._program_name = program_name
         self._fallback_plugin_name = fallback_to_plugin_name or 'dewi_core.application.EmptyPlugin'
+        self._disable_plugins_from_cmdline = disable_plugins_from_cmdline
 
     def _parse_app_args(self, args: collections.Sequence):
         parser = argparse.ArgumentParser(
             prog=self._program_name,
             usage='%(prog)s [options] [command [command-args]]')
-        parser.add_argument(
-            '-p', '--plugin', help='Load this plugin. This option can be specified more than once.',
-            default=[], action='append')
+
+        if not self._disable_plugins_from_cmdline:
+            parser.add_argument(
+                '-p', '--plugin', help='Load this plugin. This option can be specified more than once.',
+                default=[], action='append')
+
         parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
         parser.add_argument(
             '--print-backtraces', action='store_true',
@@ -132,7 +137,10 @@ class MainApplication:
         if self._process_logging_options(app_ns):
             sys.exit(1)
 
-        plugins = app_ns.plugin or [self._fallback_plugin_name]
+        if self._disable_plugins_from_cmdline:
+            plugins = [self._fallback_plugin_name]
+        else:
+            plugins = app_ns.plugin or [self._fallback_plugin_name]
 
         try:
             log_debug('Loading plugins')
@@ -224,3 +232,9 @@ class MainApplication:
         if app_ns.wait:
             print("\nPress ENTER to continue")
             input("")
+
+
+class SinglePluginApplication(MainApplication):
+    def __init__(self, program_name: str, plugin_name: str):
+        super().__init__(PluginLoader(), program_name, fallback_to_plugin_name=plugin_name,
+                         disable_plugins_from_cmdline=True)
