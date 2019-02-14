@@ -3,6 +3,8 @@
 
 import argparse
 import collections
+import os
+import shlex
 import sys
 import traceback
 import typing
@@ -86,11 +88,14 @@ class ListCommand(Command):
 class MainApplication:
     def __init__(self, loader: PluginLoader, program_name: str, *,
                  fallback_to_plugin_name: typing.Optional[str] = None,
-                 disable_plugins_from_cmdline: typing.Optional[bool] = None):
+                 disable_plugins_from_cmdline: typing.Optional[bool] = None,
+                 command_class: typing.Optional[typing.Type[Command]] = None
+                 ):
         self._loader = loader
         self._program_name = program_name
         self._fallback_plugin_name = fallback_to_plugin_name or 'dewi_core.application.EmptyPlugin'
         self._disable_plugins_from_cmdline = disable_plugins_from_cmdline
+        self._command_class = command_class
 
     def _parse_app_args(self, args: collections.Sequence):
         parser = argparse.ArgumentParser(
@@ -129,6 +134,16 @@ class MainApplication:
         return parser.parse_args(args)
 
     def run(self, args: collections.Sequence):
+        if self._command_class:
+            args_ = []
+            env_var_name = f'{self._program_name.replace("-", "_").upper()}_ARGS'
+            if env_var_name in os.environ:
+                args_ = shlex.split(os.environ[env_var_name])
+            args_ += [self._command_class.name] + args
+            args = args_
+
+            self._disable_plugins_from_cmdline = True
+
         app_ns = self._parse_app_args(args)
         if app_ns.debug:
             app_ns.print_backtraces = True
@@ -147,8 +162,13 @@ class MainApplication:
             context = self._loader.load(set(plugins))
             command_name = app_ns.command
 
-            context.commands.register_class(ListAllCommand)
-            context.commands.register_class(ListCommand)
+            if self._command_class:
+                context.commands.register_class(self._command_class)
+                prog = self._program_name
+            else:
+                context.commands.register_class(ListAllCommand)
+                context.commands.register_class(ListCommand)
+                prog = '{} {}'.format(self._program_name, command_name)
 
             if command_name in context.command_registry:
 
@@ -156,7 +176,7 @@ class MainApplication:
                 command = command_class()
                 parser = argparse.ArgumentParser(
                     description=command.description,
-                    prog='{} {}'.format(self._program_name, command_name))
+                    prog=prog)
 
                 command.register_arguments(parser)
                 ns = parser.parse_args(app_ns.commandargs)
@@ -238,3 +258,8 @@ class SinglePluginApplication(MainApplication):
     def __init__(self, program_name: str, plugin_name: str):
         super().__init__(PluginLoader(), program_name, fallback_to_plugin_name=plugin_name,
                          disable_plugins_from_cmdline=True)
+
+
+class SingleCommandApplication(MainApplication):
+    def __init__(self, program_name: str, command_class: typing.Type[Command]):
+        super().__init__(PluginLoader(), program_name, command_class=command_class)
