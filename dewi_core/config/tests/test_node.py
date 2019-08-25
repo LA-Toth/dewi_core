@@ -24,8 +24,10 @@ class N2(Node):
 
 NODE_TEST_RESULT = """count: 100
 members:
-- {x: 0, y: null}
-- {x: 0, y: 42}
+- x: 0
+  y: null
+- x: 0
+  y: 42
 title: null
 """
 
