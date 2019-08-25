@@ -32,7 +32,7 @@ setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
     license="LGPLv3",
-    version="2.0.1",
+    version="3.0.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",

@@ -1,3 +1,10 @@
+3.0.0
+  - Add SinglePluginApplication class, a subclass of MainApplication
+  - Add SingleCommandApplication class, a sublcass of MainApplication,
+    it disables application-level options
+  - MainApplication is renamed to Application as it's a generic app class
+  - application.py's non-public classes (the commands) got '_' prefix
+
 2.0.1
   - fix package requirements in setup.py
   - start using semantic versioning
