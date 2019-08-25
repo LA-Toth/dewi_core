@@ -67,7 +67,7 @@ def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_com
         print(format_str.format(cmdname, description))
 
 
-class ListAllCommand(Command):
+class _ListAllCommand(Command):
     name = 'list-all'
     description = 'Lists all available command with aliases'
 
@@ -76,7 +76,7 @@ class ListAllCommand(Command):
         _list_commands(args.program_name_, context.command_registry, all_commands=True)
 
 
-class ListCommand(Command):
+class _ListCommand(Command):
     name = 'list'
     description = 'Lists all available command with their names only'
 
@@ -166,8 +166,8 @@ class MainApplication:
                 context.commands.register_class(self._command_class)
                 prog = self._program_name
             else:
-                context.commands.register_class(ListAllCommand)
-                context.commands.register_class(ListCommand)
+                context.commands.register_class(_ListAllCommand)
+                context.commands.register_class(_ListCommand)
                 prog = '{} {}'.format(self._program_name, command_name)
 
             if command_name in context.command_registry:
