@@ -85,7 +85,7 @@ class _ListCommand(Command):
         _list_commands(args.program_name_, context.command_registry)
 
 
-class MainApplication:
+class Application:
     def __init__(self, loader: PluginLoader, program_name: str, *,
                  fallback_to_plugin_name: typing.Optional[str] = None,
                  disable_plugins_from_cmdline: typing.Optional[bool] = None,
@@ -254,12 +254,12 @@ class MainApplication:
             input("")
 
 
-class SinglePluginApplication(MainApplication):
+class SinglePluginApplication(Application):
     def __init__(self, program_name: str, plugin_name: str):
         super().__init__(PluginLoader(), program_name, fallback_to_plugin_name=plugin_name,
                          disable_plugins_from_cmdline=True)
 
 
-class SingleCommandApplication(MainApplication):
+class SingleCommandApplication(Application):
     def __init__(self, program_name: str, command_class: typing.Type[Command]):
         super().__init__(PluginLoader(), program_name, command_class=command_class)

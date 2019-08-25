@@ -4,7 +4,7 @@
 import argparse
 
 import dewi_core.testcase
-from dewi_core.application import MainApplication
+from dewi_core.application import Application
 from dewi_core.command import Command
 from dewi_core.context_managers import redirect_outputs
 from dewi_core.loader.context import Context
@@ -48,11 +48,11 @@ class FakePluginLoader(PluginLoader):
         return context
 
 
-class TestMainApplication(dewi_core.testcase.TestCase):
+class TestApplication(dewi_core.testcase.TestCase):
     def set_up(self):
         self.command = FakeCommand()
         self.loader = FakePluginLoader(FakeCommand)
-        self.application = MainApplication(self.loader, 'myprogram')
+        self.application = Application(self.loader, 'myprogram')
 
     def _invoke_application(self, args, *, expected_exit_value=1):
         with self.assert_raises(SystemExit) as context:
