@@ -209,7 +209,7 @@ class Application:
             if app_ns.print_backtraces:
                 einfo = sys.exc_info()
                 tb = traceback.extract_tb(einfo[2])
-                tb_str = 'An exception occured:\n  Type: %s\n  Message: %s\n\n' % \
+                tb_str = 'An exception occurred:\n  Type: %s\n  Message: %s\n\n' % \
                          (einfo[0].__name__, einfo[1])
                 for t in tb:
                     tb_str += '  File %s:%s in %s\n    %s\n' % (t.filename, t.lineno, t.name, t.line)
