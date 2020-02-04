@@ -195,20 +195,11 @@ class Application:
                 print(f"ERROR: The command '{command_name}' is not known.\n")
                 similar_names = get_similar_names_to(command_name, sorted(context.command_registry.get_command_names()))
 
-                if similar_names:
-                    print('Similar names - firstly based on command name length:')
-                    for name in similar_names:
-                        print('  {:30s}   -- {}'.format(
-                            name,
-                            context.command_registry.get_command_class_descriptor(name).get_class().description))
-                else:
-                    print('NO similar command name.')
-
-                    print('Available commands with aliases:')
-                    for name in sorted(context.command_registry.get_command_names()):
-                        print('  {:30s}   -- {}'.format(
-                            name,
-                            context.command_registry.get_command_class_descriptor(name).get_class().description))
+                print('Similar names - firstly based on command name length:')
+                for name in similar_names:
+                    print('  {:30s}   -- {}'.format(
+                        name,
+                        context.command_registry.get_command_class_descriptor(name).get_class().description))
                 sys.exit(1)
 
         except SystemExit:
