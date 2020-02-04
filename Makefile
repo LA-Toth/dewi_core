@@ -5,6 +5,7 @@ help:
 	@echo "Available common targets:"
 	@echo "check            --- check everything"
 	@echo "tests            --- run Python unit tests"
+	@echo "coverage         --- run Python unit tests with coverage"
 	@echo "cs               --- run coding standards checks"
 	@echo "pylint           --- run pylint checks only"
 	@echo "pep8             --- run pep8 checks only"
@@ -52,3 +53,7 @@ codestyle:
 
 .PHONY: pep8
 pep8: codestyle
+
+.PHONY: coverage
+coverage:
+	PYTHONPATH=".:$(PYTHONPATH)" $(COVERAGE) -s $(NOSE_TEST_PATHS)
