@@ -145,9 +145,10 @@ class Application:
             self._disable_plugins_from_cmdline = True
 
         app_ns = self._parse_app_args(args)
-        if app_ns.debug:
+        if app_ns.debug or os.environ.get('DEWI_DEBUG', 0) == 1:
             app_ns.print_backtraces = True
             app_ns.log_level = 'debug'
+            app_ns.debug = True
 
         if self._process_logging_options(app_ns):
             sys.exit(1)
