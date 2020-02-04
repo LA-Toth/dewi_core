@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Laszlo Attila Toth
+# Copyright 2018-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import typing
@@ -63,7 +63,7 @@ class NodeAndNodeListTest(dewi_core.testcase.TestCase):
     def test_load_from_yaml(self):
         self.tested = N2()
         self.assert_equal(NODE_EMPTY_RESULT, yaml.dump(self.tested))
-        self.tested.load_from(yaml.load(NODE_TEST_RESULT))
+        self.tested.load_from(yaml.load(NODE_TEST_RESULT, Loader=yaml.SafeLoader))
         self.assert_equal(NODE_TEST_RESULT, yaml.dump(self.tested))
 
     def test_size_of_empty_object(self):
