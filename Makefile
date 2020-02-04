@@ -55,5 +55,14 @@ codestyle:
 pep8: codestyle
 
 .PHONY: coverage
-coverage:
-	PYTHONPATH=".:$(PYTHONPATH)" $(COVERAGE) -s $(NOSE_TEST_PATHS)
+coverage: cov cov-html
+
+.PHONY: cov
+cov:
+	$(COVERAGE) run -m nose -s $(NOSE_TEST_PATHS)
+
+.PHONY: cov-html
+cov-html:
+	mkdir -p doc/
+	$(COVERAGE) html -d doc/coverage
+	open doc/coverage/index.html || true

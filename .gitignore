@@ -22,3 +22,6 @@ __pycache__
 
 # Python virtualenv
 /venv
+
+# coverage
+/doc/coverage
