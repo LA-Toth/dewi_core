@@ -211,6 +211,50 @@ class TestApplicationWithDefaultFallbackPlugin(InvokableAppWithCommandTest):
         self.assert_equal({'dewi_core.application.EmptyPlugin'}, set(self.loader.loaded))
 
 
+class TestSimpleApplication(InvokableAppWithCommandTest):
+    def set_up(self):
+        self.application = SimpleApplication(self.APP_NAME, FakePlugin.name_str_)
+
+    def test_help_option(self):
+        self.assert_help_option()
+
+    def test_run_no_args_is_the_list_command(self):
+        self.assert_no_args()
+
+    def test_list_command(self):
+        self.assert_list_command()
+
+    def test_list_all_command(self):
+        self.assert_list_all_command()
+
+    def test_command_run_method_is_called(self):
+        self.assert_fake_command_run(['fake'])
+
+
+class TestSimpleApplicationWithoutCommand(InvokableAppWithCommandTest):
+    def set_up(self):
+        self.application = SimpleApplication(self.APP_NAME, 'dewi_core.application.EmptyPlugin')
+
+    def test_help_option(self):
+        self.assert_help_option()
+
+    def test_run_no_args_is_the_list_command(self):
+        self.assert_no_args(include_fake_command=False)
+
+    def test_list_command(self):
+        self.assert_list_command(include_fake_command=False)
+
+    def test_list_all_command(self):
+        self.assert_list_all_command(include_fake_command=False)
+
+    def test_command_not_found(self):
+        redirect = self._invoke_application_redirected(
+            ['fake', 'something', 'another'],
+            expected_exit_value=1)
+        self.assert_in("ERROR: The command 'fake' is not known.", redirect.stdout.getvalue())
+        self.assert_equal('', redirect.stderr.getvalue())
+
+
 class TestSinglePluginApplication(InvokableAppWithCommandTest):
     def set_up(self):
         self.application = SinglePluginApplication(self.APP_NAME, FakePlugin.name_str_)

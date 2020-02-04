@@ -246,6 +246,11 @@ class Application:
             input("")
 
 
+class SimpleApplication(Application):
+    def __init__(self, program_name: str, default_plugin_name: str):
+        super().__init__(PluginLoader(), program_name, fallback_to_plugin_name=default_plugin_name)
+
+
 class SinglePluginApplication(Application):
     def __init__(self, program_name: str, plugin_name: str):
         super().__init__(PluginLoader(), program_name, fallback_to_plugin_name=plugin_name,
