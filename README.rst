@@ -52,20 +52,19 @@ The exact plugin can be hidden if there is a main entry point or script:
 .. code-block:: python
 
     #!/usr/bin/env python3
-    from dewi_core.application import MainApplication
-    from dewi_core.loader.loader import PluginLoader
+    import sys
+
+    from dewi_core.application import SimpleApplication
 
 
     def main():
-        args = ['-p', 'steven.StevenPlugin'] + sys.argv[1:]
-
-        loader = PluginLoader()
-        app = MainApplication(loader, 'steven')
-        app.run(args)
+        app = SimpleApplication('steven', 'steven.StevenPlugin')
+        app.run(sys.argv[1:])
 
 
     if __name__ == '__main__':
         main()
+
 
 
 Usage as a regular Python library
