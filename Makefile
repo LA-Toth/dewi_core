@@ -19,7 +19,7 @@ tests:
 	$(NOSE) -s $(NOSE_TEST_PATHS)
 
 .PHONY: cs
-cs: pylint pep8
+cs: pep8 pylint
 
 .PHONY: pylint
 pylint:
