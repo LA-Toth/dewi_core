@@ -24,4 +24,5 @@ __pycache__
 /venv
 
 # coverage
+/.coverage
 /doc/coverage
