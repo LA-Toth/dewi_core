@@ -2,7 +2,6 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
-import collections
 import os
 import shlex
 import sys
@@ -28,35 +27,27 @@ class EmptyPlugin(Plugin):
 def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_commands: bool = False):
     commands = dict()
     max_length = 0
-    max_name_length = 0
     infix = '  - alias of '
     infix_len = len(infix)
 
     for name in command_registry.get_command_names():
-        desc = command_registry.get_command_class_descriptor(name)
-        command = desc.get_class()
-        command_name = desc.get_name()
+        command_name, description = _get_command_name_and_description(command_registry, name)
 
         if name == command_name:
             cmdname = name
-            current_length = len(name)
         else:
-
             if not all_commands:
                 continue
+
             cmdname = (name, command_name)
-            current_length = len(name) + len(command_name) + infix_len
 
-        if len(name) > max_name_length:
-            max_name_length = len(name)
+        if len(name) > max_length:
+            max_length = len(name)
 
-        if current_length > max_length:
-            max_length = current_length
+        commands[name] = (cmdname, description)
 
-        commands[name] = (cmdname, command.description)
-
-    format_str = "  {0:<" + str(max_length) + "}   -- {1}"
-    alias_format_str = "{0:<" + str(max_name_length) + "}" + infix + "{1}"
+    format_str = "  {0:<" + str(max_length * 2 + infix_len) + "}   -- {1}"
+    alias_format_str = "{0:<" + str(max_length) + "}" + infix + "{1}"
 
     print(f'Available {prog_name.capitalize()} Commands.')
     for name in sorted(commands):
@@ -64,6 +55,13 @@ def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_com
         if isinstance(cmdname, tuple):
             cmdname = alias_format_str.format(*cmdname)
         print(format_str.format(cmdname, description))
+
+
+def _get_command_name_and_description(command_registry, name):
+    desc = command_registry.get_command_class_descriptor(name)
+    description = desc.get_class().description
+    command_name = desc.get_name()
+    return command_name, description
 
 
 class _ListAllCommand(Command):
@@ -96,7 +94,7 @@ class Application:
         self._disable_plugins_from_cmdline = disable_plugins_from_cmdline
         self._command_class = command_class
 
-    def _parse_app_args(self, args: collections.Sequence):
+    def _parse_app_args(self, args: typing.List[str]):
         parser = argparse.ArgumentParser(
             prog=self._program_name,
             usage='%(prog)s [options] [command [command-args]]')
@@ -132,34 +130,21 @@ class Application:
             default=[], )
         return parser.parse_args(args)
 
-    def run(self, args: collections.Sequence):
+    def run(self, args: typing.List[str]):
         if self._command_class:
-            args_ = []
-            env_var_name = f'{self._program_name.replace("-", "_").upper()}_ARGS'
-            if env_var_name in os.environ:
-                args_ = shlex.split(os.environ[env_var_name])
-            args_ += [self._command_class.name] + args
-            args = args_
+            args = self._update_args_from_custom_env_var(args)
 
             self._disable_plugins_from_cmdline = True
 
         app_ns = self._parse_app_args(args)
-        if app_ns.debug or os.environ.get('DEWI_DEBUG', 0) == 1:
-            app_ns.print_backtraces = True
-            app_ns.log_level = 'debug'
-            app_ns.debug = True
+        self._process_debug_opts(app_ns)
 
         if self._process_logging_options(app_ns):
             sys.exit(1)
 
-        if self._disable_plugins_from_cmdline:
-            plugins = [self._fallback_plugin_name]
-        else:
-            plugins = app_ns.plugin or [self._fallback_plugin_name]
-
         try:
             log_debug('Loading plugins')
-            context = self._loader.load(set(plugins))
+            context = self._loader.load(set(self._get_plugin_names(app_ns)))
             command_name = app_ns.command
 
             if self._command_class:
@@ -206,16 +191,25 @@ class Application:
             raise
         except BaseException as exc:
             if app_ns.print_backtraces:
-                einfo = sys.exc_info()
-                tbs = traceback.extract_tb(einfo[2])
-                tb_str = 'An exception occurred:\n  Type: %s\n  Message: %s\n\n' % \
-                         (einfo[0].__name__, einfo[1])
-                for tb in tbs:
-                    tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
-                print(tb_str)
+                self._print_backtrace()
             print(exc, file=sys.stderr)
             self._wait_for_termination_if_needed(app_ns)
             sys.exit(1)
+
+    def _process_debug_opts(self, app_ns: argparse.Namespace):
+        if app_ns.debug or os.environ.get('DEWI_DEBUG', 0) == 1:
+            app_ns.print_backtraces = True
+            app_ns.log_level = 'debug'
+            app_ns.debug = True
+
+    def _update_args_from_custom_env_var(self, args: typing.List[str]):
+        args_ = []
+        env_var_name = f'{self._program_name.replace("-", "_").upper()}_ARGS'
+        if env_var_name in os.environ:
+            args_ = shlex.split(os.environ[env_var_name])
+        args_ += [self._command_class.name] + args
+        args = args_
+        return args
 
     def _process_logging_options(self, args: argparse.Namespace):
         if args.log_none:
@@ -240,6 +234,22 @@ class Application:
             create_logger(self._program_name, logger_types, args.log_level, filenames=args.log_file)
 
         return 0
+
+    def _get_plugin_names(self, app_ns: argparse.Namespace):
+        if self._disable_plugins_from_cmdline:
+            plugins = [self._fallback_plugin_name]
+        else:
+            plugins = app_ns.plugin or [self._fallback_plugin_name]
+        return plugins
+
+    def _print_backtrace(self):
+        einfo = sys.exc_info()
+        tbs = traceback.extract_tb(einfo[2])
+        tb_str = 'An exception occurred:\n  Type: %s\n  Message: %s\n\n' % \
+                 (einfo[0].__name__, einfo[1])
+        for tb in tbs:
+            tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
+        print(tb_str)
 
     def _wait_for_termination_if_needed(self, app_ns):
         if app_ns.wait:
