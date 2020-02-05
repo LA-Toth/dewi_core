@@ -1,4 +1,4 @@
-# Copyright 2017-2019 Laszlo Attila Toth
+# Copyright 2017-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import types
@@ -11,9 +11,6 @@ from dewi_core.loader.plugin import Plugin
 
 class CommandPlugin(Plugin):
     command: typing.Type[Command]
-
-    def get_description(self) -> str:
-        return 'Command plugin of: ' + self.command.description
 
     def load(self, c: Context):
         c.commands.register_class(self.command)

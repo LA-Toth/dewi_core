@@ -1,4 +1,4 @@
-# Copyright 2015-2019 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
@@ -19,8 +19,7 @@ from dewi_core.utils.levenstein import get_similar_names_to
 
 
 class EmptyPlugin(Plugin):
-    def get_description(self) -> str:
-        return 'Default plugin which does nothing'
+    """Default plugin which does nothing"""
 
     def load(self, c: Context):
         pass

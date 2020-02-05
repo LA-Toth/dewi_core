@@ -13,9 +13,6 @@ class Plugin:
     A plugin is an extension of DEWI.
     """
 
-    def get_description(self) -> str:
-        raise NotImplementedError
-
     def get_dependencies(self) -> collections.Iterable:
         return ()
 
@@ -33,8 +30,7 @@ class Plugin:
         >>
         >>
         >>  class SamplePlugin(Plugin):
-        >>      def get_description(self) -> str:
-        >>          return 'Provides "sample" command'
+        >>      '''Provides "sample" command'''
         >>
         >>      def load(self, c: Context):
         >>          self._r(c, SampleCommand)

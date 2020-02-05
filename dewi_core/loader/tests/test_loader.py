@@ -1,4 +1,4 @@
-# Copyright 2015-2018 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections
@@ -10,8 +10,7 @@ from dewi_core.loader.plugin import Plugin
 
 
 class TestPlugin1(Plugin):
-    def get_description(self) -> str:
-        return "Sample description"
+    """Sample description"""
 
     def get_dependencies(self) -> collections.Iterable:
         return ()
@@ -21,8 +20,7 @@ class TestPlugin1(Plugin):
 
 
 class TestPlugin2a(Plugin):
-    def get_description(self) -> str:
-        return "Sample description"
+    """Sample description"""
 
     def get_dependencies(self) -> collections.Iterable:
         return ('dewi_core.loader.tests.test_loader.TestPlugin1',)
@@ -32,9 +30,6 @@ class TestPlugin2a(Plugin):
 
 
 class TestPlugin2b(Plugin):
-    def get_description(self) -> str:
-        return "Sample description"
-
     def get_dependencies(self) -> collections.Iterable:
         return ('dewi_core.loader.tests.test_loader.TestPlugin1',)
 
@@ -43,9 +38,6 @@ class TestPlugin2b(Plugin):
 
 
 class TestPlugin3(Plugin):
-    def get_description(self) -> str:
-        return "Sample description"
-
     def get_dependencies(self) -> collections.Iterable:
         return (
             'dewi_core.loader.tests.test_loader.TestPlugin2a',
@@ -58,9 +50,6 @@ class TestPlugin3(Plugin):
 
 
 class TestPluginWithInvalidDependencies1(Plugin):
-    def get_description(self) -> str:
-        return "Sample description"
-
     def get_dependencies(self) -> collections.Iterable:
         return (
             'dewi_core.loader2.tests2.test_loader2.TestPlugin1',
@@ -72,8 +61,7 @@ class TestPluginWithInvalidDependencies1(Plugin):
 
 
 class TestPluginO1(Plugin):
-    def get_description(self):
-        return "plugin with circular dependencies"
+    """plugin with circular dependencies"""
 
     def get_dependencies(self):
         return ('dewi_core.loader.tests.test_loader.TestPluginO2',)
@@ -83,8 +71,7 @@ class TestPluginO1(Plugin):
 
 
 class TestPluginO2(Plugin):
-    def get_description(self):
-        return "plugin with circular dependencies"
+    """plugin with circular dependencies"""
 
     def get_dependencies(self):
         return ('dewi_core.loader.tests.test_loader.TestPluginO1',)
