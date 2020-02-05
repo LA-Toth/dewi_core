@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Laszlo Attila Toth
+# Copyright 2016-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import typing
@@ -24,57 +24,57 @@ class Config:
         self._config[key] = value
 
     def set(self, entry: str, value):
-        c, key = self._get_container_and_key(entry)
+        cfg, key = self._get_container_and_key(entry)
 
-        if key in c and isinstance(c[key], (dict, list, set)):
+        if key in cfg and isinstance(cfg[key], (dict, list, set)):
             raise InvalidEntry("The '{}' entry should not refer either a dict, list or set".format(entry))
 
-        c[key] = value
+        cfg[key] = value
 
     def _get_container_and_key(self, entry):
         parents = entry.split('.')
         key = parents.pop()
-        c = self._config
+        cfg = self._config
 
         for parent in parents:
-            if parent not in c:
-                c[parent] = dict()
+            if parent not in cfg:
+                cfg[parent] = dict()
 
-            c = c[parent]
+            cfg = cfg[parent]
 
-        return c, key
+        return cfg, key
 
     def append(self, list_entry: str, value):
-        c, key = self._get_container_and_key(list_entry)
+        cfg, key = self._get_container_and_key(list_entry)
 
-        if key not in c:
-            c[key] = list()
+        if key not in cfg:
+            cfg[key] = list()
 
-        c[key].append(value)
+        cfg[key].append(value)
 
     def add_to_set(self, list_entry: str, value):
-        c, key = self._get_container_and_key(list_entry)
+        cfg, key = self._get_container_and_key(list_entry)
 
-        if key not in c:
-            c[key] = set()
+        if key not in cfg:
+            cfg[key] = set()
 
-        c[key].add(value)
+        cfg[key].add(value)
 
     def get(self, entry: str):
         keys = entry.split('.')
-        c = self._config
+        cfg = self._config
 
         try:
             for key in keys:
-                c = c[key]
+                cfg = cfg[key]
         except KeyError:
             return None
 
-        return c
+        return cfg
 
     def delete(self, list_entry: str):
-        c, key = self._get_container_and_key(list_entry)
-        del c[key]
+        cfg, key = self._get_container_and_key(list_entry)
+        del cfg[key]
 
     def dump(self, file, ignore: typing.Optional[typing.List[str]] = None):
         cfg = self._config
@@ -89,10 +89,10 @@ class Config:
         self._print(self._config, '', file=file)
 
     def _print(self, config: dict, prefix: str, file=None):
-        for k in sorted(config.keys()):
-            v = config[k]
+        for key in sorted(config.keys()):
+            value = config[key]
 
-            if isinstance(v, dict):
-                self._print(v, "{}{}.".format(prefix, k), file=file)
+            if isinstance(value, dict):
+                self._print(value, "{}{}.".format(prefix, key), file=file)
             else:
-                print("{}{}: {}".format(prefix, k, v), file=file)
+                print("{}{}: {}".format(prefix, key, value), file=file)

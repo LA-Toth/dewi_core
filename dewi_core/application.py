@@ -207,11 +207,11 @@ class Application:
         except BaseException as exc:
             if app_ns.print_backtraces:
                 einfo = sys.exc_info()
-                tb = traceback.extract_tb(einfo[2])
+                tbs = traceback.extract_tb(einfo[2])
                 tb_str = 'An exception occurred:\n  Type: %s\n  Message: %s\n\n' % \
                          (einfo[0].__name__, einfo[1])
-                for t in tb:
-                    tb_str += '  File %s:%s in %s\n    %s\n' % (t.filename, t.lineno, t.name, t.line)
+                for tb in tbs:
+                    tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
                 print(tb_str)
             print(exc, file=sys.stderr)
             self._wait_for_termination_if_needed(app_ns)
@@ -238,6 +238,8 @@ class Application:
                 logger_types = LoggerType.CONSOLE
 
             create_logger(self._program_name, logger_types, args.log_level, filenames=args.log_file)
+
+        return 0
 
     def _wait_for_termination_if_needed(self, app_ns):
         if app_ns.wait:

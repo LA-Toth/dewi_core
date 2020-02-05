@@ -1,4 +1,4 @@
-# Copyright 2015-2018 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections
@@ -44,8 +44,8 @@ class PluginLoader:
         try:
             module_name, class_name = name.rsplit('.', 1)
             module = importlib.import_module(module_name)
-        except (ImportError, ValueError) as e:
-            raise PluginLoaderError("Plugin '{}' is not found or cannot be imported; error='{}'".format(name, e))
+        except (ImportError, ValueError) as exc:
+            raise PluginLoaderError(f"Plugin '{name}' is not found or cannot be imported; error='{exc}'")
 
         try:
             plugin_class = getattr(module, class_name)

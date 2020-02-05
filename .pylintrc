@@ -41,7 +41,7 @@ persistent=yes
 #disable=
 
 disable=C0111,W0611,R0201,W0613,R0903,E1101,R0923,E1002,E1001,I0011,R0921,\
-        R0922,E1103,C1001,W0232,C0325,C0330,C0326,W0231,R0801
+        R0922,E1103,C1001,W0232,C0325,C0330,C0326,W0231,R0801,W0603
 
 # C0111     missing-docstring       Our priority is to make the code document
 #                                   itself. Docstring is required only when
@@ -121,6 +121,9 @@ disable=C0111,W0611,R0201,W0613,R0903,E1101,R0923,E1002,E1001,I0011,R0921,\
 #                                   sections of highly similar plugins (i.e. presenters that definitely
 #                                   will have the same import section in a lot of cases). Because of
 #                                   this many false positives were reported.
+#
+# W0603     global-statement        Used only when needed, so disabling in the code
+#                                   decreases readability.
 
 [REPORTS]
 
@@ -194,7 +197,7 @@ bad-functions=map,filter,apply,input
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Regular expression which should only match correct module level names
-const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__)|[A-Z_][a-zA-Z0-9]+Plugin)$
 
 # Regular expression which should only match correct class names
 class-rgx=[A-Z_][a-zA-Z0-9]+$
@@ -206,12 +209,12 @@ function-rgx=(([a-z][a-z0-9_]{2,30})|(__?[a-z_0-9]{2,70}))$
 # Regular expression which should only match correct method names
 # Private methods and BDD-style xUnit test methods and data_provider methods
 # are allowed to have nice explanatory names
-method-rgx=((_?[a-z][a-z0-9_]{2,37})|((__|provide_)[a-z_0-9]{2,70})|((test|assert)[a-z0-9_]{2,100}))$
+method-rgx=((_?[a-z][a-z0-9_]{2,37})|((__|provide_)[a-z_0-9]{2,70})|((test|assert)[a-z0-9_]{2,100})|_r)$
 
 # Regular expression which should only match correct instance attribute names
 # Private instance attribute names are allowed to have nice explanatory names
 # The unittest module uses camelCase for some useful properties, they are allowed
-attr-rgx=((_?[a-z][a-z0-9_]{2,35})|(__[a-z_0-9]{2,70}))$
+attr-rgx=((_?[a-z][a-z0-9_]{2,35})|(__[a-z_0-9]{2,70})|[k-z])$
 
 # Regular expression which should only match correct argument names
 # Type annotated short argument names are okay

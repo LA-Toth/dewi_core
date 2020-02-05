@@ -42,9 +42,9 @@ class NodeAndNodeListTest(dewi_core.testcase.TestCase):
         self.tested = N2()
         self.tested.members.append(N1())
 
-        z = N1()
-        z.y = 42
-        self.tested.members.append(z)
+        node = N1()
+        node.y = 42
+        self.tested.members.append(node)
 
     def test_empty_object(self):
         self.assert_equal(NODE_EMPTY_RESULT, yaml.dump(N2()))

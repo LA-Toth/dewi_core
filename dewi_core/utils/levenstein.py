@@ -1,6 +1,10 @@
-# Copyright 2018 Tóth, László Attila
+# Copyright 2018-2020 Tóth, László Attila
 # Distributed under the terms of the GNU Lesser General Public License v3
 # The license can be found in COPYING file or on http://www.gnu.org/licenses/
+
+# R0913: too many argument
+# R0914: too many locals (get_similar_names_to)
+# pylint: disable=R0913,R0914
 
 
 def qsort(lst, func=None):
@@ -73,9 +77,9 @@ def levenhstein(str1, str2, w, a, s, d):
                 row2[j + 1] = row1[j]
 
             # swap
-            if (i > 0 and j > 0 and str1[i - 1] == str2[j] and
-                    str1[i] == str2[j - 1] and
-                    row2[j + 1] > row0[j - 1] + w):
+            if i > 0 and j > 0 and str1[i - 1] == str2[j] \
+                    and str1[i] == str2[j - 1] \
+                    and row2[j + 1] > row0[j - 1] + w:
                 row2[j + 1] = row0[j - 1] + w
 
             # deletion
@@ -106,21 +110,22 @@ def get_similar_names_to(name, possible_names, max_result_count=6, w=0, a=2, s=1
         nonlocal distances
         l1 = distances[s1]
         l2 = distances[s2]
+
         if l1 != l2:
             return l1 <= l2
-        else:
-            return s1 <= s2
+
+        return s1 <= s2
 
     sorted_names = qsort(possible_names, levenshtein_compare)
 
     best_similarity = distances[sorted_names[0]]
-    n = 1
+    count = 1
     name_len = len(sorted_names)
-    while n < name_len and best_similarity == distances[sorted_names[n]]:
-        n = n + 1
+    while count < name_len and best_similarity == distances[sorted_names[count]]:
+        count = count + 1
 
     similar_names = list()
-    if n < max_result_count:
-        for i in range(0, n):
+    if count < max_result_count:
+        for i in range(count):
             similar_names.append(sorted_names[i])
     return similar_names

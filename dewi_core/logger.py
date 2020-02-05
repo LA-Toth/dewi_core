@@ -1,4 +1,4 @@
-# Copyright 2018-2019 Laszlo Attila Toth
+# Copyright 2018-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import enum
@@ -31,8 +31,8 @@ class LogLevel(enum.Enum):
     def from_string(s: str):
         try:
             return LogLevel[s.upper()]
-        except KeyError as e:
-            raise ValueError(e)
+        except KeyError as exc:
+            raise ValueError(exc)
 
 
 class _Handlers:
@@ -78,12 +78,12 @@ class _Handlers:
     def create_handler(cls, logger_type: LoggerType, *, filename: typing.Optional[str] = None):
         if logger_type == LoggerType.CONSOLE:
             return cls.create_console_handler()
-        elif logger_type == LoggerType.SYSLOG:
+        if logger_type == LoggerType.SYSLOG:
             return cls.create_syslog_handler()
-        elif logger_type == LoggerType.FILE:
+        if logger_type == LoggerType.FILE:
             return cls.create_file_handler(filename)
-        elif logger_type == LoggerType.NONE:
-            return cls.create_null_handler()
+        # same as: logger_type == LoggerType.NONE:
+        return cls.create_null_handler()
 
 
 def _format_message(message: str, args: typing.Dict) -> str:
@@ -118,7 +118,7 @@ class Logger:
         self._logger.setLevel(level.value)
 
     def log(self, level: int, message: str, *args, **kwargs):
-        if len(args):
+        if args:
             kwargs.update(args[0])
         args = sort_dict(kwargs)
         message_with_args = _format_message(message, args)
@@ -149,7 +149,7 @@ logger: Logger = None
 def create_logger(name: str, logger_types: typing.Union[LoggerType, typing.List[LoggerType]], log_level: str = 'info',
                   *,
                   filenames: typing.Optional[typing.List[str]] = None):
-    global logger
+    global logger  # pylint:disable=C0103
 
     if isinstance(logger_types, LoggerType):
         logger_types = [logger_types]

@@ -1,7 +1,8 @@
-# Copyright 2015-2018 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
+import collections
 import typing
 
 import dewi_core.testcase
@@ -41,10 +42,10 @@ class FakePluginLoader(PluginLoader):
         self.loaded = []
         self.command = command
 
-    def load(self, plugins):
+    def load(self, plugin_names: collections.Iterable) -> Context:
         context = Context()
 
-        self.loaded.extend(plugins)
+        self.loaded.extend(plugin_names)
 
         context.commands.register_class(self.command)
 
@@ -155,7 +156,7 @@ class TestApplication(InvokableAppWithCommandTest):
         self.assert_in('An exception occurred:\n', redirect.stdout.getvalue())
         self.assert_in(' Type: RuntimeError\n', redirect.stdout.getvalue())
         self.assert_in(' Message: Fake Command Error\n', redirect.stdout.getvalue())
-        self.assert_in('/dewi_core/tests/test_application.py:32 in run\n', redirect.stdout.getvalue())
+        self.assert_in('/dewi_core/tests/test_application.py:33 in run\n', redirect.stdout.getvalue())
         self.assert_in('Fake Command Error', redirect.stderr.getvalue())
 
     def test_unknown_command(self):

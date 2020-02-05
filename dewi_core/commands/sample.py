@@ -2,6 +2,7 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
+import typing
 
 from dewi_core.command import Command
 from dewi_core.loader.context import Context
@@ -11,7 +12,7 @@ from dewi_core.loader.plugin import Plugin
 class SampleCommand(Command):
     name = 'sample'
 
-    def run(self, ns: argparse.ArgumentParser):
+    def run(self, args: argparse.Namespace) -> typing.Optional[int]:
         return 42
 
 

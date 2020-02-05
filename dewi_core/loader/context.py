@@ -1,4 +1,4 @@
-# Copyright 2015-2019 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections
@@ -29,10 +29,10 @@ class Context(collections.Mapping):
     """
 
     def __init__(self):
-        c = CommandRegistry()
+        registry = CommandRegistry()
         self._entries = {
-            'commands': CommandRegistrar(c),
-            'commandregistry': c,
+            'commands': CommandRegistrar(registry),
+            'commandregistry': registry,
         }
 
     @property

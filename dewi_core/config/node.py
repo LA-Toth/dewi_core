@@ -1,4 +1,4 @@
-# Copyright 2017-2018 Laszlo Attila Toth
+# Copyright 2017-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections
@@ -58,9 +58,9 @@ class NodeList(list):
             if isinstance(item, Node):
                 self.append(item)
             else:
-                n = self.type_()
-                n.load_from(item)
-                self.append(n)
+                node = self.type_()
+                node.load_from(item)
+                self.append(node)
 
 
 def load_node(node: Node, d: dict):
