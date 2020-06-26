@@ -159,11 +159,8 @@ class Application:
 
                 command_class = context.command_registry.get_command_class_descriptor(command_name).get_class()
                 command = command_class()
-                parser = argparse.ArgumentParser(
-                    description=command.description,
-                    prog=prog)
 
-                command.register_arguments(parser)
+                parser = self._create_command_parser(command, prog)
                 ns = parser.parse_args(app_ns.commandargs)
                 ns.running_command_ = command_name
                 ns.debug_ = app_ns.debug
@@ -241,6 +238,49 @@ class Application:
         else:
             plugins = app_ns.plugin or [self._fallback_plugin_name]
         return plugins
+
+    def _create_command_parser(self, command: Command, prog: str):
+        parser = argparse.ArgumentParser(
+            description=command.description,
+            prog=prog)
+        parser.set_defaults(running_subcommands_=[])
+        command.register_arguments(parser)
+        if command.subcommand_classes:
+            self._register_subcommands([], command, parser)
+
+        return parser
+
+    def _register_subcommands(self, prev_command_names: typing.List[str], command: Command,
+                              parser: argparse.ArgumentParser,
+                              last_command_name: typing.Optional[str] = None):
+        last_command_name = last_command_name or ''
+        dest_name = 'running_subcommand_'
+        if last_command_name:
+            dest_name += f'{last_command_name}_'
+        parsers = parser.add_subparsers(dest=dest_name)
+
+        for subcommand_class in command.subcommand_classes:
+            subcommand: Command = subcommand_class()
+            subparser = parsers.add_parser(subcommand.name, help=subcommand.description, aliases=subcommand.aliases)
+            subcommand.register_arguments(subparser)
+
+            if subcommand.subcommand_classes:
+                subcommand_name = f'{last_command_name}_{subcommand.name}'
+                self._register_subcommands(prev_command_names + [subcommand.name], subcommand, subparser,
+                                           subcommand_name)
+
+            subparser.set_defaults(running_subcommands_=prev_command_names + [subcommand.name],
+                                   func=subcommand.run)
+
+        command._orig_saved_run_method = command.run
+
+        def run(ns: argparse.Namespace):
+            if vars(ns)[dest_name] is not None:
+                return ns.func(ns)
+            else:
+                return command._orig_saved_run_method(ns)
+
+        command.run = run
 
     def _print_backtrace(self):
         einfo = sys.exc_info()
