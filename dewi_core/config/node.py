@@ -1,14 +1,14 @@
 # Copyright 2017-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections
+import collections.abc
 import typing
 
 import yaml
 from yaml.dumper import Dumper
 
 
-class Node(collections.MutableMapping):
+class Node(collections.abc.MutableMapping):
     """
     This class is a base class to add typesafe objects to a Config.
     Example:

@@ -1,7 +1,6 @@
 # Copyright 2015-2017 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections
 import typing
 
 from dewi_core.command import Command
@@ -13,7 +12,7 @@ class Plugin:
     A plugin is an extension of DEWI.
     """
 
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> typing.Iterable[str]:
         return ()
 
     def load(self, c: Context):

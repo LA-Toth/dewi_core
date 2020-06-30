@@ -1,8 +1,8 @@
 # Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections
 import importlib
+import typing
 
 from dewi_core.loader.context import Context
 
@@ -16,7 +16,7 @@ class PluginLoader:
     def __init__(self):
         self._loaded_plugins = dict()
 
-    def load(self, plugin_names: collections.Iterable) -> Context:
+    def load(self, plugin_names: typing.List[str]) -> Context:
         dependency_graph = {}
         for name in plugin_names:
             plugin = self._get_plugin(name)
@@ -74,7 +74,7 @@ class PluginLoader:
             dependency_graph: dict,
             visited_nodes: list,
             dependency_list: list,
-            plugin_names: collections.Iterable):
+            plugin_names: typing.List[str]):
         for name in plugin_names:
             if name in dependency_list:
                 continue

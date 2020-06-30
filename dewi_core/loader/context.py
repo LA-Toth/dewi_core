@@ -1,7 +1,7 @@
 # Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections
+import collections.abc
 
 from dewi_core.commandregistry import CommandRegistry, CommandRegistrar
 
@@ -18,7 +18,7 @@ class ContextEntryAlreadyRegistered(ContextError):
     pass
 
 
-class Context(collections.Mapping):
+class Context(collections.abc.Mapping):
     """
     A context is a generic purpose registry, which helps
     communicate between different parts of the code. Instead of a global variable
