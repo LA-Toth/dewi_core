@@ -1,3 +1,17 @@
+3.1.0
+  - Application: support DEWI_DEBUG environment var, if it is '1',
+    debug mode is used (same as Application's '--debug' option)
+  - Application: remove dead code, as there is at least one suggestion
+    if command is not found
+  - Add SimpleApplication: no loader, just the program name and a plugin name
+  - Update examples
+  - Remove Plugin.get_description(), it was never used. It does not break any
+    plugin having this method. Using docstring instead.
+  - Add recursive SubCommand support: a Comand and also the SubCommands
+    can have subcommands via the subcommand_classes member
+  - Update code to change deprecated implementation to an up-to-date one.
+  - Update tests and Makefile
+
 3.0.0
   - Add SinglePluginApplication class, a subclass of MainApplication
   - Add SingleCommandApplication class, a sublcass of MainApplication,
