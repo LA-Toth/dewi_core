@@ -22,9 +22,12 @@ class SubCommand(Command):
     def run(self, args: argparse.Namespace) -> typing.Optional[int]:
         field = f"running_subcommand__{'_'.join(args.running_subcommands_)}_"
         if vars(args)[field] is None:
+            progname = args.program_name_
+            if not args.single_command_:
+                progname += f' {args.running_command_}'
             print("Missing subcommand.")
             print("Try help:")
-            print(f" {args.program_name_} {args.running_command_} {' '.join(args.running_subcommands_)} --help")
+            print(f"{progname} {' '.join(args.running_subcommands_)} --help")
         else:
             raise NotImplementedError()
 

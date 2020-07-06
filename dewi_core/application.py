@@ -168,6 +168,7 @@ class Application:
                 ns.parser_ = parser
                 ns.context_ = context
                 ns.program_name_ = self._program_name
+                ns.single_command_ = self._command_class is not None
 
                 log_debug('Starting command', name=command_name)
                 sys.exit(command.run(ns))
