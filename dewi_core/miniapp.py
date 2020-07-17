@@ -3,7 +3,6 @@
 
 import argparse
 import os
-import shlex
 import sys
 import traceback
 import typing
@@ -14,31 +13,24 @@ from dewi_core.logger import create_logger, LoggerType, LogLevel, log_debug
 
 class Application:
     def __init__(self, program_name: str,
-                 command_class: typing.Optional[typing.Type[Command]]):
+                 command_class: typing.Optional[typing.Type[Command]],
+                 *,
+                 enable_short_debug_option: bool = False,
+                 ):
         self._program_name = program_name
         self._command_class = command_class
+        self._enable_short_debug_option = enable_short_debug_option
 
     def run(self, args: typing.List[str]):
-        if 'DEWI_ARGS' in os.environ:
-            args_ = shlex.split(os.environ['DEWI_ARGS'])
-            args = [self._command_class.name] + args
-
-        app_ns = self._parse_app_args(args)
-        self._process_debug_opts(app_ns)
-
-        if self._process_logging_options(app_ns):
-            sys.exit(1)
-
+        ns = argparse.Namespace()
+        ns.print_backtraces_ = False
+        ns.wait = False
         try:
-            prog = self._program_name
-
             command = self._command_class()
 
-            parser = self._create_command_parser(command, prog)
-            ns = parser.parse_args(app_ns.commandargs)
+            parser = self._create_command_parser(command)
+            ns = parser.parse_args(args)
             ns.running_command_ = self._command_class.name
-            ns.debug_ = app_ns.debug
-            ns.print_backtraces_ = app_ns.print_backtraces
             ns.parser_ = parser
             ns.context_ = None
             ns.program_name_ = self._program_name
@@ -48,28 +40,28 @@ class Application:
             sys.exit(command.run(ns))
 
         except SystemExit:
-            self._wait_for_termination_if_needed(app_ns)
+            self._wait_for_termination_if_needed(ns)
             raise
         except BaseException as exc:
-            if app_ns.print_backtraces:
+            if ns.print_backtraces_:
                 self._print_backtrace()
             print(exc, file=sys.stderr)
-            self._wait_for_termination_if_needed(app_ns)
+            self._wait_for_termination_if_needed(ns)
             sys.exit(1)
 
-    def _parse_app_args(self, args: typing.List[str]):
-        parser = argparse.ArgumentParser(
-            prog=self._program_name,
-            usage='%(prog)s [options] [command [command-args]]')
-
+    def _register_app_args(self, parser: argparse.ArgumentParser):
         parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
         parser.add_argument(
-            '--print-backtraces', action='store_true',
+            '--print-backtraces', action='store_true', dest='print_backtraces_',
             help='Print backtraces of the exceptions')
-        parser.add_argument('--debug', '-d', action='store_true', help='Enable print/log debug messages')
+
+        debug_opts = ['--debug']
+        if self._enable_short_debug_option:
+            debug_opts.append('-d')
+        parser.add_argument(*debug_opts, dest='debug_', action='store_true', help='Enable print/log debug messages')
 
         logging = parser.add_argument_group('Logging')
-        logging.add_argument('-v', '--log-level', dest='log_level', help='Set log level, default: warning',
+        logging.add_argument('--log-level', dest='log_level', help='Set log level, default: warning',
                              choices=[i.name.lower() for i in LogLevel], default='info')
         logging.add_argument('--log-syslog', dest='log_syslog', action='store_true',
                              help='Log to syslog. Can be combined with other log targets')
@@ -82,17 +74,11 @@ class Application:
         logging.add_argument('--no-log', '-l', dest='log_none', action='store_true',
                              help='Disable logging. If this is set, other targets are invalid.')
 
-        parser.add_argument('command', nargs='?', help='Command to be run', default='list')
-        parser.add_argument(
-            'commandargs', nargs=argparse.REMAINDER, help='Additonal options and arguments of the specified command',
-            default=[], )
-        return parser.parse_args(args)
-
-    def _process_debug_opts(self, app_ns: argparse.Namespace):
-        if app_ns.debug or os.environ.get('DEWI_DEBUG', 0) == 1:
-            app_ns.print_backtraces = True
-            app_ns.log_level = 'debug'
-            app_ns.debug = True
+    def _process_debug_opts(self, ns: argparse.Namespace):
+        if ns.debug_ or os.environ.get('DEWI_DEBUG', 0) == 1:
+            ns.print_backtraces_ = True
+            ns.log_level = 'debug'
+            ns.debug_ = True
 
     def _process_logging_options(self, args: argparse.Namespace):
         if args.log_none:
@@ -118,11 +104,12 @@ class Application:
 
         return 0
 
-    def _create_command_parser(self, command: Command, prog: str):
+    def _create_command_parser(self, command: Command):
         parser = argparse.ArgumentParser(
             description=command.description,
-            prog=prog)
+            prog=self._program_name)
         parser.set_defaults(running_subcommands_=[])
+        self._register_app_args(parser)
         command.register_arguments(parser)
         if command.subcommand_classes:
             self._register_subcommands([], command, parser)
