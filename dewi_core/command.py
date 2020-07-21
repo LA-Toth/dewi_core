@@ -1,8 +1,10 @@
-# Copyright 2015-2018 Laszlo Attila Toth
+# Copyright 2015-2020 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
 import typing
+
+from dewi_core.logger import log_error
 
 
 class Command:
@@ -28,6 +30,7 @@ class SubCommand(Command):
             print("Missing subcommand.")
             print("Try help:")
             print(f"{progname} {' '.join(args.running_subcommands_)} --help")
+            log_error(f"Missing subcommand for {progname} {' '.join(args.running_subcommands_)}")
         else:
             raise NotImplementedError()
 
