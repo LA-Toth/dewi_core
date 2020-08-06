@@ -28,7 +28,6 @@ def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_com
     commands = dict()
     max_length = 0
     infix = '  - alias of '
-    infix_len = len(infix)
 
     for name in command_registry.get_command_names():
         command_name, description = _get_command_name_and_description(command_registry, name)
@@ -46,7 +45,11 @@ def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_com
 
         commands[name] = (cmdname, description)
 
-    format_str = "  {0:<" + str(max_length * 2 + infix_len) + "}   -- {1}"
+    if all_commands:
+        format_str = "  {0:<" + str(max_length * 2 + len(infix)) + "}   -- {1}"
+    else:
+        format_str = "  {0:<" + str(max_length) + "}   -- {1}"
+
     alias_format_str = "{0:<" + str(max_length) + "}" + infix + "{1}"
 
     print(f'Available {prog_name.capitalize()} Commands.')
