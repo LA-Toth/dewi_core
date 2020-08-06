@@ -1,3 +1,9 @@
+3.2.0
+  - Added "miniapp" module covering the application.SingleCommandApplication's
+    features but the original Application's parameters are also added
+  - Application: listing commands use minimal screen width (bugfix)
+  - subcommand: properly print help command if single command application is used
+
 3.1.0
   - Application: support DEWI_DEBUG environment var, if it is '1',
     debug mode is used (same as Application's '--debug' option)
