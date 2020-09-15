@@ -18,7 +18,7 @@ def qsort(lst, func=None):
     return lesser + [pivot] + greater_eq
 
 
-# from git's levenhstein.c:
+# from git's levenshtein.c:
 #
 # This function implements the Damerau-Levenshtein algorithm to
 # calculate a distance between strings.
@@ -56,7 +56,7 @@ def qsort(lst, func=None):
 #
 # Note that this algorithm calculates a distance _iff_ d == a.
 #
-def levenhstein(str1, str2, w, a, s, d):
+def levenshtein(str1, str2, w, a, s, d):
     len1 = len(str1)
     len2 = len(str2)
     row0 = [0] * (len2 + 1)
@@ -98,13 +98,14 @@ def levenhstein(str1, str2, w, a, s, d):
     return row1[len2]
 
 
-def get_similar_names_to(name, possible_names, max_result_count=6, w=0, a=2, s=1, d=4):
+def get_similar_names_to(name, possible_names, max_result_count=6, w=0, a=1, s=2, d=3):
+    # values of w, a, s, d are from git's commit c41494f8c89c330cc9bd4629cdc3c428803e76bc
     if not possible_names:
         return []
 
     distances = dict()
     for current_name in possible_names:
-        distances[current_name] = levenhstein(name, current_name, w, a, s, d)
+        distances[current_name] = levenshtein(name, current_name, w, a, s, d)
 
     def levenshtein_compare(s1, s2):
         nonlocal distances
