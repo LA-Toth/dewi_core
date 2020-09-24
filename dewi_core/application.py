@@ -5,7 +5,6 @@ import argparse
 import os
 import shlex
 import sys
-import traceback
 import typing
 
 from dewi_core.command import Command
@@ -14,6 +13,7 @@ from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.loader.plugin import Plugin
 from dewi_core.logger import create_logger, LoggerType, LogLevel, log_debug
+from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
 
 
@@ -192,8 +192,9 @@ class Application:
             raise
         except BaseException as exc:
             if app_ns.print_backtraces:
-                self._print_backtrace()
-            print(exc, file=sys.stderr)
+                print_backtrace()
+            else:
+                print(exc, file=sys.stderr)
             self._wait_for_termination_if_needed(app_ns)
             sys.exit(1)
 
@@ -285,15 +286,6 @@ class Application:
                 return command._orig_saved_run_method(ns)
 
         command.run = run
-
-    def _print_backtrace(self):
-        einfo = sys.exc_info()
-        tbs = traceback.extract_tb(einfo[2])
-        tb_str = 'An exception occurred:\n  Type: %s\n  Message: %s\n\n' % \
-                 (einfo[0].__name__, einfo[1])
-        for tb in tbs:
-            tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
-        print(tb_str)
 
     def _wait_for_termination_if_needed(self, app_ns):
         if app_ns.wait:

@@ -1,0 +1,37 @@
+# Copyright 2015-2020 Laszlo Attila Toth
+# Distributed under the terms of the GNU Lesser General Public License v3
+
+import sys
+import traceback
+import typing
+
+
+def print_backtrace(tbe: typing.Optional[traceback.TracebackException] = None):
+    print(format_backtrace(tbe))
+
+
+def format_backtrace(tbe: typing.Optional[traceback.TracebackException] = None) -> str:
+    return 'Exception occurred:' + _format_traceback_exception(tbe or traceback.TracebackException(*sys.exc_info()))
+
+
+def _format_traceback_exception(exc: traceback.TracebackException, prefix: typing.Optional[str] = None):
+    tb_str = ''
+
+    if exc.__cause__ is not None:
+        tb_str += _format_traceback_exception(
+            exc.__cause__,
+            '\nThe above exception was the direct cause of the following exception:')
+    elif exc.__context__ is not None and not exc.__suppress_context__:
+        tb_str += _format_traceback_exception(
+            exc.__context__,
+            '\nDuring handling of the above exception, another exception occurred')
+    return tb_str + _format_single_traceback(exc, prefix)
+
+
+def _format_single_traceback(exc: traceback.TracebackException, prefix: typing.Optional[str] = None):
+    tb_str = f'  Type: {exc.exc_type.__name__}\n  Message: {exc}\n\n'
+    for tb in traceback.extract_tb(exc.exc_traceback):
+        tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
+    if prefix:
+        tb_str += f'{prefix}\n'
+    return tb_str
