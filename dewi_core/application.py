@@ -194,7 +194,7 @@ class Application:
             if app_ns.print_backtraces:
                 print_backtrace()
             else:
-                print(exc, file=sys.stderr)
+                print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
             self._wait_for_termination_if_needed(app_ns)
             sys.exit(1)
 

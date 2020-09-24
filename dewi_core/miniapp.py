@@ -45,7 +45,7 @@ class Application:
         except BaseException as exc:
             if ns.print_backtraces_:
                 print_backtrace()
-            print(exc, file=sys.stderr)
+            print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
             self._wait_for_termination_if_needed(ns)
             sys.exit(1)
 
