@@ -16,7 +16,7 @@ class PluginLoader:
     def __init__(self):
         self._loaded_plugins = dict()
 
-    def load(self, plugin_names: typing.List[str]) -> Context:
+    def load(self, plugin_names: typing.Iterable[str]) -> Context:
         dependency_graph = {}
         for name in plugin_names:
             plugin = self._get_plugin(name)
@@ -74,7 +74,7 @@ class PluginLoader:
             dependency_graph: dict,
             visited_nodes: list,
             dependency_list: list,
-            plugin_names: typing.List[str]):
+            plugin_names: typing.Iterable[str]):
         for name in plugin_names:
             if name in dependency_list:
                 continue
