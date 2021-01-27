@@ -36,6 +36,10 @@ class Application:
             ns.program_name_ = self._program_name
             ns.single_command_ = True
 
+            self._process_debug_opts(ns)
+            if self._process_logging_options(ns):
+                sys.exit(1)
+
             log_debug('Starting command', name=self._command_class.name)
             sys.exit(command.run(ns))
 
