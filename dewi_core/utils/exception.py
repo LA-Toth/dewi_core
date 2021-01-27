@@ -32,7 +32,7 @@ def _format_traceback_exception(exc: traceback.TracebackException, prefix: typin
 
 def _format_single_traceback(exc: traceback.TracebackException, prefix: typing.Optional[str] = None):
     tb_str = f'  Type: {exc.exc_type.__name__}\n  Message: {exc}\n\n'
-    for tb in traceback.extract_tb(exc.exc_traceback):
+    for tb in exc.stack:
         tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)
     if prefix:
         tb_str += f'{prefix}\n'
