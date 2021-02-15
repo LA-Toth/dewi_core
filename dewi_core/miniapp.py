@@ -6,7 +6,7 @@ import os
 import sys
 import typing
 
-from dewi_core.command import Command
+from dewi_core.command import Command, register_subcommands
 from dewi_core.logger import LogLevel, log_debug, create_logger_from_config, LoggerConfig
 from dewi_core.utils.exception import print_backtrace
 
@@ -97,41 +97,9 @@ class Application:
         self._register_app_args(parser)
         command.register_arguments(parser)
         if command.subcommand_classes:
-            self._register_subcommands([], command, parser)
+            register_subcommands([], command, parser)
 
         return parser
-
-    def _register_subcommands(self, prev_command_names: typing.List[str], command: Command,
-                              parser: argparse.ArgumentParser,
-                              last_command_name: typing.Optional[str] = None):
-        last_command_name = last_command_name or ''
-        dest_name = 'running_subcommand_'
-        if last_command_name:
-            dest_name += f'{last_command_name}_'
-        parsers = parser.add_subparsers(dest=dest_name)
-
-        for subcommand_class in command.subcommand_classes:
-            subcommand: Command = subcommand_class()
-            subparser = parsers.add_parser(subcommand.name, help=subcommand.description, aliases=subcommand.aliases)
-            subcommand.register_arguments(subparser)
-
-            if subcommand.subcommand_classes:
-                subcommand_name = f'{last_command_name}_{subcommand.name}'
-                self._register_subcommands(prev_command_names + [subcommand.name], subcommand, subparser,
-                                           subcommand_name)
-
-            subparser.set_defaults(running_subcommands_=prev_command_names + [subcommand.name],
-                                   func=subcommand.run)
-
-        command._orig_saved_run_method = command.run
-
-        def run(ns: argparse.Namespace):
-            if vars(ns)[dest_name] is not None:
-                return ns.func(ns)
-            else:
-                return command._orig_saved_run_method(ns)
-
-        command.run = run
 
     def _wait_for_termination_if_needed(self, app_ns):
         if app_ns.wait:
