@@ -1,4 +1,4 @@
-# Copyright 2015-2020 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
@@ -7,7 +7,7 @@ import sys
 import typing
 
 from dewi_core.command import Command
-from dewi_core.logger import create_logger, LoggerType, LogLevel, log_debug
+from dewi_core.logger import LogLevel, log_debug, create_logger_from_config, LoggerConfig
 from dewi_core.utils.exception import print_backtrace
 
 
@@ -79,34 +79,15 @@ class Application:
                              help='Disable logging. If this is set, other targets are invalid.')
 
     def _process_debug_opts(self, ns: argparse.Namespace):
-        if ns.debug_ or os.environ.get('DEWI_DEBUG', 0) == 1:
+        if ns.debug_ or os.environ.get('DEWI_DEBUG', 0) == '1':
             ns.print_backtraces_ = True
             ns.log_level = 'debug'
             ns.debug_ = True
 
     def _process_logging_options(self, args: argparse.Namespace):
-        if args.log_none:
-            if args.log_syslog or args.log_file or args.log_console:
-                print('ERROR: --log-none cannot be used any other log target,')
-                print('ERROR: none of: --log-file, --log-console, --log-syslog')
-                return 1
-            create_logger(self._program_name, LoggerType.NONE, args.log_level, filenames=[])
-        else:
-            logger_types = []
-            if args.log_console:
-                logger_types.append(LoggerType.CONSOLE)
-            if args.log_file:
-                logger_types.append(LoggerType.FILE)
-            if args.log_syslog:
-                logger_types.append(LoggerType.SYSLOG)
-
-            if not logger_types:
-                # Using default logger
-                logger_types = LoggerType.CONSOLE
-
-            create_logger(self._program_name, logger_types, args.log_level, filenames=args.log_file)
-
-        return 0
+        return create_logger_from_config(
+            LoggerConfig.create(self._program_name, args.log_level, args.log_none, args.log_syslog, args.log_console,
+                                args.log_file))
 
     def _create_command_parser(self, command: Command):
         parser = argparse.ArgumentParser(

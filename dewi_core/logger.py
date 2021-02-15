@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Laszlo Attila Toth
+# Copyright 2018-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import enum
@@ -7,6 +7,7 @@ import logging.handlers
 import sys
 import typing
 
+from dewi_core.config.node import Node
 from dewi_core.utils.dictionaries import sort_dict
 
 
@@ -33,6 +34,28 @@ class LogLevel(enum.Enum):
             return LogLevel[s.upper()]
         except KeyError as exc:
             raise ValueError(exc)
+
+
+class LoggerConfig(Node):
+    def __init__(self):
+        self.name: str = ''
+        self.level: str = ''
+        self.log_none: bool = False
+        self.log_syslog: bool = False
+        self.log_console: bool = False
+        self.log_file: typing.Optional[typing.List[str]] = []
+
+    @classmethod
+    def create(cls, name: str, level: str, log_none: bool, log_syslog: bool, log_console: bool,
+               log_file: typing.Optional[typing.List[str]]):
+        c = cls()
+        c.name = name
+        c.level = level
+        c.log_none = log_none
+        c.log_syslog = log_syslog
+        c.log_console = log_console
+        c.log_file = log_file
+        return c
 
 
 class _Handlers:
@@ -156,6 +179,31 @@ def create_logger(name: str, logger_types: typing.Union[LoggerType, typing.List[
 
     logger = Logger(name, logger_types, filenames=filenames or [])
     logger.set_level(LogLevel.from_string(log_level))
+
+
+def create_logger_from_config(config: LoggerConfig) -> int:
+    if config.log_none:
+        if config.log_syslog or config.log_file or config.log_console:
+            print('ERROR: --log-none cannot be used any other log target,')
+            print('ERROR: none of: --log-file, --log-console, --log-syslog')
+            return 1
+        create_logger(config.name, LoggerType.NONE, config.level, filenames=[])
+    else:
+        logger_types = []
+        if config.log_console:
+            logger_types.append(LoggerType.CONSOLE)
+        if config.log_file:
+            logger_types.append(LoggerType.FILE)
+        if config.log_syslog:
+            logger_types.append(LoggerType.SYSLOG)
+
+        if not logger_types:
+            # Using default logger
+            logger_types = LoggerType.CONSOLE
+
+        create_logger(config.name, logger_types, config.level, filenames=config.log_file)
+
+    return 0
 
 
 def log_debug(*args, **kwargs):
