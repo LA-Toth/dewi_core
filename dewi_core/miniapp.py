@@ -7,11 +7,12 @@ import sys
 import typing
 
 from dewi_core.command import Command, register_subcommands
-from dewi_core.logger import LogLevel, log_debug, create_logger_from_config, LoggerConfig
+from dewi_core.loader.context import Context
+from dewi_core.logger import log_debug, LogLevel, create_logger_from_config, LoggerConfig
 from dewi_core.utils.exception import print_backtrace
 
 
-class Application:
+class ApplicationBase:
     def __init__(self, program_name: str,
                  command_class: typing.Optional[typing.Type[Command]],
                  *,
@@ -22,38 +23,21 @@ class Application:
         self._enable_short_debug_option = enable_short_debug_option
 
     def run(self, args: typing.List[str]):
-        ns = argparse.Namespace()
-        ns.print_backtraces_ = False
-        ns.wait = False
-        try:
-            command = self._command_class()
+        raise NotImplementedError()
 
-            parser = self._create_command_parser(command)
-            ns = parser.parse_args(args)
-            ns.running_command_ = self._command_class.name
-            ns.parser_ = parser
-            ns.context_ = None
-            ns.program_name_ = self._program_name
-            ns.single_command_ = True
+    def _create_command_ns(self, parser: argparse.ArgumentParser,
+                           args: typing.List[str], command_name: str,
+                           context: typing.Optional[Context],
+                           single_command: bool) -> argparse.Namespace:
+        ns = parser.parse_args(args)
+        ns.running_command_ = command_name
+        ns.parser_ = parser
+        ns.context_ = context
+        ns.program_name_ = self._program_name
+        ns.single_command_ = single_command
+        return ns
 
-            self._process_debug_opts(ns)
-            if self._process_logging_options(ns):
-                sys.exit(1)
-
-            log_debug('Starting command', name=self._command_class.name)
-            sys.exit(command.run(ns))
-
-        except SystemExit:
-            self._wait_for_termination_if_needed(ns)
-            raise
-        except BaseException as exc:
-            if ns.print_backtraces_:
-                print_backtrace()
-            print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
-            self._wait_for_termination_if_needed(ns)
-            sys.exit(1)
-
-    def _register_app_args(self, parser: argparse.ArgumentParser):
+    def _register_base_app_args(self, parser: argparse.ArgumentParser):
         parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
         parser.add_argument(
             '--print-backtraces', action='store_true', dest='print_backtraces_',
@@ -89,12 +73,13 @@ class Application:
             LoggerConfig.create(self._program_name, args.log_level, args.log_none, args.log_syslog, args.log_console,
                                 args.log_file))
 
-    def _create_command_parser(self, command: Command):
+    def _create_command_parser(self, command: Command, prog: str, *, register_app_args: bool = False):
         parser = argparse.ArgumentParser(
             description=command.description,
-            prog=self._program_name)
+            prog=prog)
         parser.set_defaults(running_subcommands_=[])
-        self._register_app_args(parser)
+        if register_app_args:
+            self._register_base_app_args(parser)
         command.register_arguments(parser)
         if command.subcommand_classes:
             register_subcommands([], command, parser)
@@ -105,6 +90,45 @@ class Application:
         if app_ns.wait:
             print("\nPress ENTER to continue")
             input("")
+
+    def _print_exception(self, print_bt: bool, exc: BaseException):
+        if print_bt:
+            print_backtrace()
+        else:
+            print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
+
+
+class Application(ApplicationBase):
+    def __init__(self, program_name: str,
+                 command_class: typing.Optional[typing.Type[Command]],
+                 *,
+                 enable_short_debug_option: bool = False,
+                 ):
+        super().__init__(program_name, command_class, enable_short_debug_option=enable_short_debug_option)
+
+    def run(self, args: typing.List[str]):
+        ns = argparse.Namespace()
+        ns.print_backtraces_ = False
+        ns.wait = False
+        try:
+            command = self._command_class()
+            parser = self._create_command_parser(command, self._program_name, register_app_args=True)
+            ns = self._create_command_ns(parser, args, command.name, None, single_command=True)
+
+            self._process_debug_opts(ns)
+            if self._process_logging_options(ns):
+                sys.exit(1)
+
+            log_debug('Starting command', name=self._command_class.name)
+            sys.exit(command.run(ns))
+
+        except SystemExit:
+            self._wait_for_termination_if_needed(ns)
+            raise
+        except BaseException as exc:
+            self._print_exception(ns.print_backtraces_, exc)
+            self._wait_for_termination_if_needed(ns)
+            sys.exit(1)
 
 
 # For compatibility with the 'application' module

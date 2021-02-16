@@ -7,13 +7,13 @@ import shlex
 import sys
 import typing
 
-from dewi_core.command import Command, register_subcommands
+from dewi_core.command import Command
 from dewi_core.commandregistry import CommandRegistry
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.loader.plugin import Plugin
-from dewi_core.logger import LogLevel, log_debug, create_logger_from_config, LoggerConfig
-from dewi_core.utils.exception import print_backtrace
+from dewi_core.logger import log_debug, create_logger_from_config, LoggerConfig
+from dewi_core.miniapp import ApplicationBase
 from dewi_core.utils.levenshtein import get_similar_names_to
 
 
@@ -85,17 +85,16 @@ class _ListCommand(Command):
         _list_commands(args.program_name_, context.command_registry)
 
 
-class Application:
+class Application(ApplicationBase):
     def __init__(self, loader: PluginLoader, program_name: str, *,
                  fallback_to_plugin_name: typing.Optional[str] = None,
                  disable_plugins_from_cmdline: typing.Optional[bool] = None,
                  command_class: typing.Optional[typing.Type[Command]] = None
                  ):
+        super().__init__(program_name, command_class, enable_short_debug_option=True)
         self._loader = loader
-        self._program_name = program_name
         self._fallback_plugin_name = fallback_to_plugin_name or 'dewi_core.application.EmptyPlugin'
         self._disable_plugins_from_cmdline = disable_plugins_from_cmdline
-        self._command_class = command_class
 
     def _parse_app_args(self, args: typing.List[str]):
         parser = argparse.ArgumentParser(
@@ -107,25 +106,7 @@ class Application:
                 '-p', '--plugin', help='Load this plugin. This option can be specified more than once.',
                 default=[], action='append')
 
-        parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
-        parser.add_argument(
-            '--print-backtraces', action='store_true',
-            help='Print backtraces of the exceptions')
-        parser.add_argument('--debug', '-d', action='store_true', help='Enable print/log debug messages')
-
-        logging = parser.add_argument_group('Logging')
-        logging.add_argument('-v', '--log-level', dest='log_level', help='Set log level, default: warning',
-                             choices=[i.name.lower() for i in LogLevel], default='info')
-        logging.add_argument('--log-syslog', dest='log_syslog', action='store_true',
-                             help='Log to syslog. Can be combined with other log targets')
-        logging.add_argument('--log-console', '--log-stdout', dest='log_console', action='store_true',
-                             help='Log to STDOUT, the console. Can be combined with other targets.'
-                                  'If no target is specified, this is used as default.')
-        logging.add_argument('--log-file', dest='log_file', action='append',
-                             help='Log to a file. Can be specified multiple times and '
-                                  'can be combined with other options.')
-        logging.add_argument('--no-log', '-l', dest='log_none', action='store_true',
-                             help='Disable logging. If this is set, other targets are invalid.')
+        self._register_base_app_args(parser)
 
         parser.add_argument('command', nargs='?', help='Command to be run', default='list')
         parser.add_argument(
@@ -164,14 +145,9 @@ class Application:
                 command = command_class()
 
                 parser = self._create_command_parser(command, prog)
-                ns = parser.parse_args(app_ns.commandargs)
-                ns.running_command_ = command_name
-                ns.debug_ = app_ns.debug
-                ns.print_backtraces_ = app_ns.print_backtraces
-                ns.parser_ = parser
-                ns.context_ = context
-                ns.program_name_ = self._program_name
-                ns.single_command_ = self._command_class is not None
+                ns = self._create_command_ns(parser, app_ns.commandargs, command.name, context,
+                                             self._command_class is not None)
+                ns.debug_ = app_ns.debug_
 
                 log_debug('Starting command', name=command_name)
                 sys.exit(command.run(ns))
@@ -191,18 +167,9 @@ class Application:
             self._wait_for_termination_if_needed(app_ns)
             raise
         except BaseException as exc:
-            if app_ns.print_backtraces:
-                print_backtrace()
-            else:
-                print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
+            self._print_exception(app_ns.print_backtraces_, exc)
             self._wait_for_termination_if_needed(app_ns)
             sys.exit(1)
-
-    def _process_debug_opts(self, app_ns: argparse.Namespace):
-        if app_ns.debug or os.environ.get('DEWI_DEBUG', 0) == '1':
-            app_ns.print_backtraces = True
-            app_ns.log_level = 'debug'
-            app_ns.debug = True
 
     def _update_args_from_custom_env_var(self, args: typing.List[str]):
         args_ = []
@@ -224,22 +191,6 @@ class Application:
         else:
             plugins = app_ns.plugin or [self._fallback_plugin_name]
         return plugins
-
-    def _create_command_parser(self, command: Command, prog: str):
-        parser = argparse.ArgumentParser(
-            description=command.description,
-            prog=prog)
-        parser.set_defaults(running_subcommands_=[])
-        command.register_arguments(parser)
-        if command.subcommand_classes:
-            register_subcommands([], command, parser)
-
-        return parser
-
-    def _wait_for_termination_if_needed(self, app_ns):
-        if app_ns.wait:
-            print("\nPress ENTER to continue")
-            input("")
 
 
 class SimpleApplication(Application):
