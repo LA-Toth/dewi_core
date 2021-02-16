@@ -94,8 +94,7 @@ class ApplicationBase:
     def _print_exception(self, print_bt: bool, exc: BaseException):
         if print_bt:
             print_backtrace()
-        else:
-            print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
+        print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
 
 
 class Application(ApplicationBase):

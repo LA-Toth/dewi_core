@@ -153,7 +153,7 @@ class TestApplication(InvokableAppWithCommandTest):
             ['-p', 'test', '-d', 'fake', 'ERROR'],
             expected_exit_value=1)
 
-        self.assert_in('An exception occurred:\n', redirect.stdout.getvalue())
+        self.assert_in('Exception occurred:\n', redirect.stdout.getvalue())
         self.assert_in(' Type: RuntimeError\n', redirect.stdout.getvalue())
         self.assert_in(' Message: Fake Command Error\n', redirect.stdout.getvalue())
         self.assert_in('/dewi_core/tests/test_application.py:33 in run\n', redirect.stdout.getvalue())
@@ -281,7 +281,7 @@ class TestSingleCommndApplication(InvokableAppWithCommandTest):
         self.application = SingleCommandApplication(self.APP_NAME, FakeCommand)
 
     def test_help_option(self):
-        self.assert_help_option(suffix='[-h] [arguments [arguments ...]]')
+        self.assert_help_option(suffix='[-h] [arguments ...]')
 
     def test_command_run_method_is_called(self):
         self.assert_fake_command_run([])
