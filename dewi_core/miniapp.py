@@ -92,7 +92,7 @@ class ApplicationBase:
             input("")
 
     def _print_exception(self, print_bt: bool, exc: BaseException):
-        if print_bt:
+        if print_bt or os.environ.get('DEWI_DEBUG', 0) == '1':
             print_backtrace()
         print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
 
