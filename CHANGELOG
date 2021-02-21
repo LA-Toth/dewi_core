@@ -1,3 +1,16 @@
+3.3.0
+  - commands: log missing subcommand
+  - miniapp.py, application.py: extract common codes,
+    the miniapp.ApplicationBase is the base class from now on
+    subcommand registration is textracted into commands.py
+  - fix check of DEWI_DEBUG=1
+  - levenshtein: update based on git - better suggestions, too
+  - exception handling is moved into dewi_core.utils.exception
+    and use only documented interface - broken by Python 3.8
+  - logger creation is moved into dewi_core.logger
+  - Python 3.7+ (used with Python 3.8+)
+  - yaml: ignore references, except if DEWI_YAML_WITH_ALIASES is set to non-'0'
+
 3.2.0
   - Added "miniapp" module covering the application.SingleCommandApplication's
     features but the original Application's parameters are also added
