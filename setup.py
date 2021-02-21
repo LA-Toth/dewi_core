@@ -1,26 +1,14 @@
 #!/usr/bin/env python3
 #
 # DEWI: a developer tool and framework -- Core part
-# Copyright (C) 2012-2019  Laszlo Attila Toth
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+# Copyright (C) 2012-2021  Laszlo Attila Toth
+# Distributed under the terms of the GNU Lesser General Public License v3
+# see <http://www.gnu.org/licenses/>.
 
 import sys
 
-if sys.hexversion < 0x03060000:
-    raise RuntimeError("Required python version: 3.6 or newer (current: %s)" % sys.version)
+if sys.hexversion < 0x03070000:
+    raise RuntimeError("Required python version: 3.7 or newer (current: %s)" % sys.version)
 
 try:
     from setuptools import setup, find_packages
@@ -51,9 +39,9 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
@@ -61,7 +49,7 @@ setup(
     ],
     zip_safe=True,
     use_2to3=False,
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     install_requires=[
         'pyyaml',
