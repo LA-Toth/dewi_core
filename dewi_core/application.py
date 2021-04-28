@@ -17,6 +17,42 @@ from dewi_core.miniapp import ApplicationBase
 from dewi_core.utils.levenshtein import get_similar_names_to
 
 
+def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Type[Command]:
+    """
+    Returns the command  class specified in the ns namespace via its running_command_
+    and running_subcommands_ members.
+
+    The ns comes from an already parsed namespace, especially via
+    dewi_core.remoting.serialize_argparse_namespace and deserialize_argparse_namespace methods.
+
+    The command must exist.
+
+    :param plugin_name: The command plugin or app plugin containing the command referred by ns.running_command_
+    :param ns: the prepared Namespace object
+    :return: the command class based on ns.
+    """
+    loader = PluginLoader()
+    ctx = loader.load([plugin_name])
+    cmd_class = ctx.command_registry.get_command_class_descriptor(ns.running_command_).get_class()
+
+    if 'running_subcommands_' in ns and ns.running_subcommands_:
+        for sub_cmd_name in ns.running_subcommands_:
+            for cc in cmd_class.subcommand_classes:
+                if cc.name == sub_cmd_name:
+                    cmd_class = cc
+
+    ns.cmd_class_ = cmd_class
+
+    return cmd_class
+
+
+def run_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Optional[int]:
+    """
+    Runs the command returned by get_command_from_plugin_ns(). See that function.
+    """
+    return get_command_from_plugin_ns(plugin_name, ns)().run(ns)
+
+
 class EmptyPlugin(Plugin):
     """Default plugin which does nothing"""
 
