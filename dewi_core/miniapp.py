@@ -113,6 +113,7 @@ class Application(ApplicationBase):
             command = self._command_class()
             parser = self._create_command_parser(command, self._program_name, register_app_args=True)
             ns = self._create_command_ns(parser, args, command.name, None, single_command=True)
+            ns.cmd_class_ = self._command_class
 
             self._process_debug_opts(ns)
             if self._process_logging_options(ns):

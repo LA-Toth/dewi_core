@@ -184,6 +184,7 @@ class Application(ApplicationBase):
                 ns = self._create_command_ns(parser, app_ns.commandargs, command.name, context,
                                              self._command_class is not None)
                 ns.debug_ = app_ns.debug_
+                ns.cmd_class_ = command_class
 
                 log_debug('Starting command', name=command_name)
                 sys.exit(command.run(ns))

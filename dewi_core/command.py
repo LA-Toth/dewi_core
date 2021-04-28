@@ -12,6 +12,7 @@ class Command:
     aliases = list()
     description = ''
     subcommand_classes = []
+    man_page_file: str = ''  # relative to the command's file
 
     def register_arguments(self, parser: argparse.ArgumentParser) -> None:
         pass
