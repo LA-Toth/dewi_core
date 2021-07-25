@@ -3,7 +3,7 @@
 
 import collections.abc
 
-from dewi_core.commandregistry import CommandRegistry, CommandRegistrar
+from dewi_core.commandregistry import CommandRegistry
 
 
 class ContextError(Exception):
@@ -30,7 +30,7 @@ class Context(collections.abc.Mapping):
 
     def __init__(self, command_registry: CommandRegistry):
         self._entries = {
-            'commands': CommandRegistrar(command_registry),
+            'commands': command_registry,
             'commandregistry': command_registry,
         }
 
@@ -39,7 +39,7 @@ class Context(collections.abc.Mapping):
         return self._entries['commandregistry']
 
     @property
-    def commands(self) -> CommandRegistrar:
+    def commands(self) -> CommandRegistry:
         return self._entries['commands']
 
     def register(self, name: str, value):

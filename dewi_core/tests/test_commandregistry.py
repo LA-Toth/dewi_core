@@ -1,4 +1,4 @@
-# Copyright 2012-2019 Laszlo Attila Toth
+# Copyright 2012-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
@@ -9,7 +9,7 @@ from dewi_core.commandregistry import CommandRegistry, CommandRegistryException,
     ClassDescriptorWithModuleName, \
     ClassDescriptorWithModuleNameAndCommandClassMember, \
     ClassDescriptorWithModuleAndClassName, ClassDescriptorWithConcreteClass, \
-    ClassNotFound, ClassIsNotSubclassOfCommand, CommandRegistrar
+    ClassNotFound, ClassIsNotSubclassOfCommand
 
 
 # disabling C0103 pylint error, because it is triggered due to limitation of the test,
@@ -121,11 +121,10 @@ class CommandRegistryTest(dewi_core.testcase.TestCase):
         self.assert_raises(ClassIsNotSubclassOfCommand, ClassDescriptorWithConcreteClass, LocalCommand)
 
 
-class TestCommandRegistrar(dewi_core.testcase.TestCase):
+class CommandClassRegistrationTest(dewi_core.testcase.TestCase):
 
     def set_up(self):
         self._registry = CommandRegistry()
-        self._registrar = CommandRegistrar(self._registry)
 
     def test_registration_of_a_simple_command(self):
         class LocalCommand(Command):
@@ -134,7 +133,7 @@ class TestCommandRegistrar(dewi_core.testcase.TestCase):
             def run(self, args: argparse.Namespace):
                 pass
 
-        self._registrar.register_class(LocalCommand)
+        self._registry.register_class(LocalCommand)
         self.assert_equal(1, self._registry.get_command_count())
         self.assert_equal(['local-command'], self._registry.get_command_names())
         self.assert_equal(LocalCommand, self._registry.get_command_class_descriptor('local-command').get_class())
@@ -147,11 +146,11 @@ class TestCommandRegistrar(dewi_core.testcase.TestCase):
             def run(self, args: argparse.Namespace):
                 pass
 
-        self._registrar.register_class(LocalCommand)
+        self._registry.register_class(LocalCommand)
         self.assert_equal(4, self._registry.get_command_count())
         self.assert_equal({'local-command', 'a', 'b42', 'lc'}, set(self._registry.get_command_names()))
         self.assert_equal(LocalCommand, self._registry.get_command_class_descriptor('local-command').get_class())
         self.assert_equal(LocalCommand, self._registry.get_command_class_descriptor('b42').get_class())
 
     def test_registration_fails_if_not_a_command_is_registered(self):
-        self.assert_raises(ClassIsNotSubclassOfCommand, self._registrar.register_class, CommandRegistry)
+        self.assert_raises(ClassIsNotSubclassOfCommand, self._registry.register_class, CommandRegistry)

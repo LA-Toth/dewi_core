@@ -136,15 +136,3 @@ class CommandRegistry:
 
     def __contains__(self, command_name: str) -> bool:
         return command_name in self._registry
-
-
-class CommandRegistrar:
-    """
-    Wrap a CommandRegistry object for easier registration
-    """
-
-    def __init__(self, cr: CommandRegistry):
-        self._registry = cr
-
-    def register_class(self, command_class: typing.Type[Command]):
-        self._registry.register_class(command_class)
