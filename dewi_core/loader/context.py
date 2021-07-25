@@ -1,4 +1,4 @@
-# Copyright 2015-2020 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections.abc
@@ -28,11 +28,10 @@ class Context(collections.abc.Mapping):
     An example: a CommandRegistry object can be registered into this context.
     """
 
-    def __init__(self):
-        registry = CommandRegistry()
+    def __init__(self, command_registry: CommandRegistry):
         self._entries = {
-            'commands': CommandRegistrar(registry),
-            'commandregistry': registry,
+            'commands': CommandRegistrar(command_registry),
+            'commandregistry': command_registry,
         }
 
     @property

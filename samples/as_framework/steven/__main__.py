@@ -1,13 +1,14 @@
-# Copyright 2020 Laszlo Attila Toth
+# Copyright 2020-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import sys
 
-from dewi_core.application import SinglePluginApplication
+from dewi_core.application import Application
 
 
 def main():
-    app = SinglePluginApplication('steven', 'steven.StevenPlugin')
+    app = Application('steven')
+    app.load_plugin('steven.StevenPlugin')
     app.run(sys.argv[1:])
 
 

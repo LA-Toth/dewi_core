@@ -1,9 +1,10 @@
-# Copyright 2015-2020 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import importlib
 import typing
 
+from dewi_core.commandregistry import CommandRegistry
 from dewi_core.loader.context import Context
 
 
@@ -13,8 +14,9 @@ class PluginLoaderError(Exception):
 
 class PluginLoader:
 
-    def __init__(self):
+    def __init__(self, command_registry: CommandRegistry):
         self._loaded_plugins = dict()
+        self._command_registry = command_registry
 
     def load(self, plugin_names: typing.Iterable[str]) -> Context:
         dependency_graph = {}
@@ -28,7 +30,7 @@ class PluginLoader:
         visited_list = []
         self._build_dependency_list(dependency_graph, visited_list, dependency_list, dependency_graph.keys())
 
-        context = Context()
+        context = Context(self._command_registry)
         for plugin_name in dependency_list:
             self._get_plugin(plugin_name).load(context)
 

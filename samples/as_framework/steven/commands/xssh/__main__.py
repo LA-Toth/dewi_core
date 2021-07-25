@@ -1,14 +1,14 @@
-# Copyright 2020 Laszlo Attila Toth
+# Copyright 2020-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import sys
 
-from dewi_core.application import SingleCommandApplication
+from dewi_core.application import Application
 from steven.commands.xssh import XSshCommand
 
 
 def main():
-    app = SingleCommandApplication('steven-ssh', XSshCommand)
+    app = Application('steven-ssh', XSshCommand)
     app.run(sys.argv[1:])
 
 

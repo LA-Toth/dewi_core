@@ -1,9 +1,10 @@
-# Copyright 2015-2020 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import collections
 
 import dewi_core.testcase
+from dewi_core.commandregistry import CommandRegistry
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader, PluginLoaderError
 from dewi_core.loader.plugin import Plugin
@@ -82,7 +83,12 @@ class TestPluginO2(Plugin):
 
 class TestLoader(dewi_core.testcase.TestCase):
     def set_up(self):
-        self.loader = PluginLoader()
+        self.registry = CommandRegistry()
+        self.loader = PluginLoader(self.registry)
+
+    def test_that_context_command_registry_is_the_same_as_the_loader_s(self):
+        context = self.loader.load({'dewi_core.loader.tests.test_loader.TestPlugin1'})
+        self.assert_equal(context.command_registry, self.registry)
 
     def test_load_plugin_without_dependencies(self):
         context = self.loader.load({'dewi_core.loader.tests.test_loader.TestPlugin1'})

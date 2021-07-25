@@ -1,12 +1,14 @@
-# Copyright 2015-2019 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 import dewi_core.testcase
+from dewi_core.commandregistry import CommandRegistry
 from dewi_core.loader.context import Context, ContextEntryNotFound, ContextEntryAlreadyRegistered
 
 
 class ContextTest(dewi_core.testcase.TestCase):
     def set_up(self):
-        self.context = Context()
+        self.registry = CommandRegistry()
+        self.context = Context(self.registry)
 
     def test_that_context_is_almost_empty_initially(self):
         self.assert_equal(2, len(self.context))

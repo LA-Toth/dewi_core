@@ -1,17 +1,13 @@
-# Copyright 2015-2020 Laszlo Attila Toth
+# Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
-import collections
 import typing
 
 import dewi_core.testcase
-from dewi_core.application import Application, SimpleApplication, SinglePluginApplication, SingleCommandApplication
+from dewi_core.application import Application
 from dewi_core.command import Command
-from dewi_core.commandplugin import CommandPlugin
 from dewi_core.context_managers import redirect_outputs
-from dewi_core.loader.context import Context
-from dewi_core.loader.loader import PluginLoader
 
 
 class FakeCommand(Command):
@@ -34,26 +30,6 @@ class FakeCommand(Command):
 
         FakeCommand.arguments = list(arguments)
         return 42
-
-
-class FakePluginLoader(PluginLoader):
-    def __init__(self, command):
-        # super() is not wanted to call here, its interface is overridden
-        self.loaded = []
-        self.command = command
-
-    def load(self, plugin_names: collections.Iterable) -> Context:
-        context = Context()
-
-        self.loaded.extend(plugin_names)
-
-        context.commands.register_class(self.command)
-
-        return context
-
-
-FakePlugin = CommandPlugin.create(FakeCommand)
-FakePlugin.name_str_ = f'{__name__}.FakePlugin'
 
 
 class InvokableApplicationTest(dewi_core.testcase.TestCase):
@@ -115,48 +91,42 @@ class InvokableAppWithCommandTest(InvokableApplicationTest):
         assert_fake_in('\n  not-so-fake ', redirect.stdout.getvalue())
 
 
-class TestApplication(InvokableAppWithCommandTest):
+class ApplicationTest(InvokableAppWithCommandTest):
     def set_up(self):
-        self.command = FakeCommand()
-        self.loader = FakePluginLoader(FakeCommand)
-        self.application = Application(self.loader, self.APP_NAME, fallback_to_plugin_name='fallback')
+        self.application = Application(self.APP_NAME)
+        self.application.add_command_class(FakeCommand)
 
     def test_help_option(self):
         self.assert_help_option()
-        self.assert_equal(set(), set(self.loader.loaded))
 
-    def test_loading_plugins_requires_a_command_to_run(self):
+    def test_that_a_command_name_is_requiredto_run(self):
         self.assert_list_command()
-        self.assert_equal({'fallback'}, set(self.loader.loaded))
 
     def test_list_command(self):
         self.assert_list_command()
-        self.assert_equal({'fallback'}, set(self.loader.loaded))
 
     def test_list_all_command(self):
         self.assert_list_all_command()
-        self.assert_equal({'fallback'}, set(self.loader.loaded))
 
     def test_command_run_method_is_called(self):
-        self.assert_fake_command_run(['-p', 'test', 'fake'])
-        self.assert_equal({'test'}, set(self.loader.loaded))
+        self.assert_fake_command_run(['fake'])
 
     def test_command_run_method_exception_is_handled(self):
         redirect = self._invoke_application_redirected(
-            ['-p', 'test', 'fake', 'ERROR'],
+            ['fake', 'ERROR'],
             expected_exit_value=1)
         self.assert_equal('', redirect.stdout.getvalue())
         self.assert_in('Fake Command Error', redirect.stderr.getvalue())
 
     def test_command_run_method_exception_is_handled_in_debug_mode(self):
         redirect = self._invoke_application_redirected(
-            ['-p', 'test', '-d', 'fake', 'ERROR'],
+            ['-d', 'fake', 'ERROR'],
             expected_exit_value=1)
 
         self.assert_in('Exception occurred:\n', redirect.stdout.getvalue())
         self.assert_in(' Type: RuntimeError\n', redirect.stdout.getvalue())
         self.assert_in(' Message: Fake Command Error\n', redirect.stdout.getvalue())
-        self.assert_in('/dewi_core/tests/test_application.py:33 in run\n', redirect.stdout.getvalue())
+        self.assert_in('/dewi_core/tests/test_application.py:29 in run\n', redirect.stdout.getvalue())
         self.assert_in('Fake Command Error', redirect.stderr.getvalue())
 
     def test_unknown_command(self):
@@ -174,7 +144,7 @@ class TestApplication(InvokableAppWithCommandTest):
         """
 
         redirect = self._invoke_application_redirected(
-            ['-p', 'test', 'unknown-name'],
+            ['unknown-name'],
             expected_exit_value=1)
         self.assert_equal('', redirect.stderr.getvalue())
 
@@ -186,102 +156,18 @@ class TestApplication(InvokableAppWithCommandTest):
 
     def test_run_help_of_command(self):
         redirect = self._invoke_application_redirected(
-            ['-p', 'test', 'fake', '-h'],
+            ['fake', '-h'],
             expected_exit_value=0)
         self.assert_in(f'{self.APP_NAME} fake [-h]', redirect.stdout.getvalue())
         self.assert_equal('', redirect.stderr.getvalue())
-        self.assert_equal({'test'}, set(self.loader.loaded))
 
 
-class TestApplicationWithDefaultFallbackPlugin(InvokableAppWithCommandTest):
+class SingleCommandApplicationTest(InvokableAppWithCommandTest):
     def set_up(self):
-        self.command = FakeCommand()
-        self.loader = FakePluginLoader(FakeCommand)
-        self.application = Application(self.loader, self.APP_NAME)
-
-    def test_loading_plugins_requires_a_command_to_run(self):
-        self.assert_list_command()
-        self.assert_equal({'dewi_core.application.EmptyPlugin'}, set(self.loader.loaded))
-
-    def test_list_command(self):
-        self.assert_list_command()
-        self.assert_equal({'dewi_core.application.EmptyPlugin'}, set(self.loader.loaded))
-
-    def test_list_all_command(self):
-        self.assert_list_all_command()
-        self.assert_equal({'dewi_core.application.EmptyPlugin'}, set(self.loader.loaded))
-
-
-class TestSimpleApplication(InvokableAppWithCommandTest):
-    def set_up(self):
-        self.application = SimpleApplication(self.APP_NAME, FakePlugin.name_str_)
+        self.application = Application(self.APP_NAME, FakeCommand)
 
     def test_help_option(self):
-        self.assert_help_option()
-
-    def test_run_no_args_is_the_list_command(self):
-        self.assert_no_args()
-
-    def test_list_command(self):
-        self.assert_list_command()
-
-    def test_list_all_command(self):
-        self.assert_list_all_command()
-
-    def test_command_run_method_is_called(self):
-        self.assert_fake_command_run(['fake'])
-
-
-class TestSimpleApplicationWithoutCommand(InvokableAppWithCommandTest):
-    def set_up(self):
-        self.application = SimpleApplication(self.APP_NAME, 'dewi_core.application.EmptyPlugin')
-
-    def test_help_option(self):
-        self.assert_help_option()
-
-    def test_run_no_args_is_the_list_command(self):
-        self.assert_no_args(include_fake_command=False)
-
-    def test_list_command(self):
-        self.assert_list_command(include_fake_command=False)
-
-    def test_list_all_command(self):
-        self.assert_list_all_command(include_fake_command=False)
-
-    def test_command_not_found(self):
-        redirect = self._invoke_application_redirected(
-            ['fake', 'something', 'another'],
-            expected_exit_value=1)
-        self.assert_in("ERROR: The command 'fake' is not known.", redirect.stdout.getvalue())
-        self.assert_equal('', redirect.stderr.getvalue())
-
-
-class TestSinglePluginApplication(InvokableAppWithCommandTest):
-    def set_up(self):
-        self.application = SinglePluginApplication(self.APP_NAME, FakePlugin.name_str_)
-
-    def test_help_option(self):
-        self.assert_help_option()
-
-    def test_run_no_args_is_the_list_command(self):
-        self.assert_no_args()
-
-    def test_list_command(self):
-        self.assert_list_command()
-
-    def test_list_all_command(self):
-        self.assert_list_all_command()
-
-    def test_command_run_method_is_called(self):
-        self.assert_fake_command_run(['fake'])
-
-
-class TestSingleCommndApplication(InvokableAppWithCommandTest):
-    def set_up(self):
-        self.application = SingleCommandApplication(self.APP_NAME, FakeCommand)
-
-    def test_help_option(self):
-        self.assert_help_option(suffix='[-h] [arguments ...]')
+        self.assert_help_option(suffix='[-h] [--wait]')
 
     def test_command_run_method_is_called(self):
         self.assert_fake_command_run([])
