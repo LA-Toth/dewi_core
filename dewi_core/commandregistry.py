@@ -1,4 +1,4 @@
-# Copyright 2012-2019 Laszlo Attila Toth
+# Copyright 2012-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import sys
@@ -117,6 +117,12 @@ class CommandRegistry:
         self._validate_name_and_class_descriptor(name, class_descriptor)
         self._registry[name] = class_descriptor
 
+    def register_class(self, command_class: typing.Type[Command]):
+        desc = ClassDescriptorWithConcreteClass(command_class)
+        self.register_command_class(command_class.name, desc)
+        for alias in command_class.aliases:
+            self.register_command_class(alias, desc)
+
     def get_command_class_descriptor(self, name: str) -> ClassDescriptor:
         if name not in self._registry:
             raise CommandRegistryException("Specified command class name is not found; name='{0}'".format(name))
@@ -141,7 +147,4 @@ class CommandRegistrar:
         self._registry = cr
 
     def register_class(self, command_class: typing.Type[Command]):
-        desc = ClassDescriptorWithConcreteClass(command_class)
-        self._registry.register_command_class(command_class.name, desc)
-        for alias in command_class.aliases:
-            self._registry.register_command_class(alias, desc)
+        self._registry.register_class(command_class)
