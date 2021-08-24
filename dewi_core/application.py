@@ -163,6 +163,9 @@ class Application:
             if self._process_logging_options(ns):
                 sys.exit(1)
 
+            if ns.cwd:
+                os.chdir(ns.cwd)
+
             log_debug('Starting command', name=self._command_class.name)
             sys.exit(command.run(ns))
 
@@ -191,6 +194,8 @@ class Application:
             sys.exit(1)
 
         try:
+            if app_ns.cwd:
+                os.chdir(app_ns.cwd)
             command_name = app_ns.command
             self._command_registry.register_class(_ListAllCommand)
             self._command_registry.register_class(_ListCommand)
@@ -240,6 +245,7 @@ class Application:
         return ns
 
     def _register_app_args(self, parser: argparse.ArgumentParser):
+        parser.add_argument('--cwd', dest='cwd', help='Change to specified directory')
         parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
         parser.add_argument(
             '--print-backtraces', action='store_true', dest='print_backtraces_',
