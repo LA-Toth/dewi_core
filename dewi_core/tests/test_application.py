@@ -167,7 +167,7 @@ class SingleCommandApplicationTest(InvokableAppWithCommandTest):
         self.application = Application(self.APP_NAME, FakeCommand)
 
     def test_help_option(self):
-        self.assert_help_option(suffix='[-h] [--wait]')
+        self.assert_help_option(suffix='[-h] [--cwd CWD] [--wait]')
 
     def test_command_run_method_is_called(self):
         self.assert_fake_command_run([])
