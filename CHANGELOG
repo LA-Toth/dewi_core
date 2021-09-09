@@ -1,3 +1,14 @@
+4.0.0
+  - add support of remoting by (de)serializing Namespace and run
+    the current command (eg. via SSH on a remote server)
+  - add partial code for XML-based man pages of the commands
+  - CommandRegistry got all functionality of CommandRegistrar, which is removed
+  - Application:
+      * simplified, subclasses like SingleCommandApplication are removed;
+        plugin loading is explicit (Application.load_plugin and load_plugins)
+      * add --cwd option to run from that directory
+  - Python 3.8+ is required (3.7 is not tested)
+
 3.3.0
   - commands: log missing subcommand
   - miniapp.py, application.py: extract common codes,

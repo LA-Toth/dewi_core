@@ -8,7 +8,7 @@
 import sys
 
 if sys.hexversion < 0x03070000:
-    raise RuntimeError("Required python version: 3.7 or newer (current: %s)" % sys.version)
+    raise RuntimeError("Required python version: 3.8 or newer (current: %s)" % sys.version)
 
 try:
     from setuptools import setup, find_packages
@@ -20,7 +20,7 @@ setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
     license="LGPLv3",
-    version="3.3.0",
+    version="4.0.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",
@@ -39,7 +39,6 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Topic :: Software Development',
@@ -49,7 +48,7 @@ setup(
     ],
     zip_safe=True,
     use_2to3=False,
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     install_requires=[
         'pyyaml',
