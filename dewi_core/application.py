@@ -117,10 +117,12 @@ class Application:
                  command_class: typing.Optional[typing.Type[Command]] = None,
                  *,
                  enable_short_debug_option: bool = False,
+                 version: typing.Optional[str] = None
                  ):
         self._program_name = program_name
         self._command_class = command_class
         self._enable_short_debug_option = enable_short_debug_option if command_class is not None else True
+        self._version = version
         self._command_registry = CommandRegistry()
         self._command_classes = set()
 
@@ -245,6 +247,8 @@ class Application:
         return ns
 
     def _register_app_args(self, parser: argparse.ArgumentParser):
+        if self._version:
+            parser.add_argument('--version', action='version', version=f'%(prog)s {self._version}')
         parser.add_argument('--cwd', dest='cwd', help='Change to specified directory')
         parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
         parser.add_argument(
