@@ -2,6 +2,7 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
+import re
 import typing
 
 import dewi_core.testcase
@@ -126,7 +127,9 @@ class ApplicationTest(InvokableAppWithCommandTest):
         self.assert_in('Exception occurred:\n', redirect.stdout.getvalue())
         self.assert_in(' Type: RuntimeError\n', redirect.stdout.getvalue())
         self.assert_in(' Message: Fake Command Error\n', redirect.stdout.getvalue())
-        self.assert_in('/dewi_core/tests/test_application.py:29 in run\n', redirect.stdout.getvalue())
+        self.assert_in('/dewi_core/tests/test_application.py:XX in run\n',
+                       re.sub(r'dewi_core/tests/test_application.py:([0-9]+)', 'dewi_core/tests/test_application.py:XX',
+                              redirect.stdout.getvalue()))
         self.assert_in('Fake Command Error', redirect.stderr.getvalue())
 
     def test_unknown_command(self):
