@@ -36,3 +36,7 @@ class Plugin:
         >>
         """
         c.commands.register_class(t)
+
+    @staticmethod
+    def _register_config_dir(c: Context, d: str):
+        c.config_dir_registry.register_config_directory(d)

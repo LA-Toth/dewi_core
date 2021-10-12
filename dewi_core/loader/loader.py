@@ -5,6 +5,7 @@ import importlib
 import typing
 
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config_env import ConfigDirRegistry
 from dewi_core.loader.context import Context
 
 
@@ -14,9 +15,10 @@ class PluginLoaderError(Exception):
 
 class PluginLoader:
 
-    def __init__(self, command_registry: CommandRegistry):
+    def __init__(self, command_registry: CommandRegistry, config_dir_registry: ConfigDirRegistry):
         self._loaded_plugins = dict()
         self._command_registry = command_registry
+        self._config_dir_registry = config_dir_registry
 
     def load(self, plugin_names: typing.Iterable[str]) -> Context:
         dependency_graph = {}
@@ -30,7 +32,7 @@ class PluginLoader:
         visited_list = []
         self._build_dependency_list(dependency_graph, visited_list, dependency_list, dependency_graph.keys())
 
-        context = Context(self._command_registry)
+        context = Context(self._command_registry, self._config_dir_registry)
         for plugin_name in dependency_list:
             self._get_plugin(plugin_name).load(context)
 

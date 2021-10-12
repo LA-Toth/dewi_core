@@ -2,13 +2,16 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
+import os.path
 import re
 import typing
+from unittest.mock import patch
 
 import dewi_core.testcase
 from dewi_core.application import Application
 from dewi_core.command import Command
 from dewi_core.context_managers import redirect_outputs
+from dewi_core.tests.common import test_env, DATA_DIR
 
 
 class FakeCommand(Command):
@@ -92,7 +95,10 @@ class InvokableAppWithCommandTest(InvokableApplicationTest):
         assert_fake_in('\n  not-so-fake ', redirect.stdout.getvalue())
 
 
+@patch.dict(os.environ, {}, clear=True)
 class ApplicationTest(InvokableAppWithCommandTest):
+
+    @patch.dict(os.environ, {}, clear=True)
     def set_up(self):
         self.application = Application(self.APP_NAME)
         self.application.add_command_class(FakeCommand)
@@ -165,7 +171,10 @@ class ApplicationTest(InvokableAppWithCommandTest):
         self.assert_equal('', redirect.stderr.getvalue())
 
 
+@patch.dict(os.environ, {}, clear=True)
 class SingleCommandApplicationTest(InvokableAppWithCommandTest):
+
+    @patch.dict(os.environ, {}, clear=True)
     def set_up(self):
         self.application = Application(self.APP_NAME, FakeCommand)
 
@@ -174,3 +183,51 @@ class SingleCommandApplicationTest(InvokableAppWithCommandTest):
 
     def test_command_run_method_is_called(self):
         self.assert_fake_command_run([])
+
+
+@patch.dict(os.environ, {}, clear=True)
+class ApplicationWithEnvsTest(InvokableAppWithCommandTest):
+
+    @patch.dict(os.environ, {}, clear=True)
+    def set_up(self):
+        test_env.reset_entries()
+        self.application = Application(InvokableApplicationTest.APP_NAME, FakeCommand)
+
+    def _register_dir(self, directory: str):
+        self.application.register_config_directory(os.path.join(DATA_DIR, 'cfgdirs', directory))
+
+    def _register_dirs(self):
+        self._register_dir('dir1')
+        self._register_dir('dir2')
+        self._register_dir('dir3')
+
+    def _asssert_env_after_run(self, expected_list: typing.List[str], env_name: str = None):
+        self._invoke_application(['-e', env_name or 'foobar', 'fake'], expected_exit_value=42)
+        self._asssert_env(expected_list)
+
+    def _asssert_env(self, expected_list: typing.List[str]):
+        self.assert_equal(expected_list, test_env.entries, 'Mismatching list of env strings in test_env')
+
+    def test_all_env_with_name_foobar(self):
+        self._register_dirs()
+        self._asssert_env_after_run(['dir1-common', 'dir2-common', 'dir2-foobar', 'dir3-foobar'])
+
+    def test_all_env_with_name_test(self):
+        self._register_dirs()
+        self._asssert_env_after_run(['dir1-common', 'dir2-common', 'dir2-test'], 'test')
+
+    def test_all_env_with_default_env(self):
+        self.assert_equal('development', self.application._env_config.current_env)
+        self._register_dirs()
+        self._invoke_application(['fake'], expected_exit_value=42)
+        self.assert_equal('development', self.application._env_config.current_env)
+        self._asssert_env(['dir1-common', 'dir2-common', 'dir2-dev'])
+
+    @patch.dict(os.environ, {'DEWI_ENV': 'production'}, )
+    def test_all_env_with_env_var(self):
+        self.application = Application(InvokableApplicationTest.APP_NAME, FakeCommand)
+        self.assert_equal('production', self.application._env_config.current_env)
+        self._register_dirs()
+        self._invoke_application(['fake'], expected_exit_value=42)
+        self.assert_equal('production', self.application._env_config.current_env)
+        self._asssert_env(['dir1-common', 'dir2-common', 'dir2-prod'])

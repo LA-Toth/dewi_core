@@ -9,6 +9,7 @@ import typing
 from dewi_core.command import Command
 from dewi_core.command import register_subcommands
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config_env import EnvConfig, ConfigDirRegistry
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.logger import LogLevel
 from dewi_core.logger import log_debug, create_logger_from_config, LoggerConfig
@@ -31,8 +32,11 @@ def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typi
     :return: the command class based on ns.
     """
     command_registry = CommandRegistry()
-    loader = PluginLoader(command_registry)
-    ctx = loader.load([plugin_name])
+    cfg_dir_registry = ConfigDirRegistry(EnvConfig(ns.environment_))
+    cfg_dir_registry.register_config_directories(ns.config_directories_)
+    loader = PluginLoader(command_registry, cfg_dir_registry)
+    loader.load([plugin_name])
+    cfg_dir_registry.load_env()
     cmd_class = command_registry.get_command_class_descriptor(ns.running_command_).get_class()
 
     if 'running_subcommands_' in ns and ns.running_subcommands_:
@@ -113,18 +117,24 @@ class _ListCommand(Command):
 
 
 class Application:
+    DEFAULT_ENV = 'development'
+
     def __init__(self, program_name: str,
                  command_class: typing.Optional[typing.Type[Command]] = None,
                  *,
                  enable_short_debug_option: bool = False,
+                 enable_env_options: bool = True,
                  version: typing.Optional[str] = None
                  ):
         self._program_name = program_name
         self._command_class = command_class
         self._enable_short_debug_option = enable_short_debug_option if command_class is not None else True
+        self._enable_env_options = enable_env_options if command_class is not None else True
         self._version = version
         self._command_registry = CommandRegistry()
         self._command_classes = set()
+        self._env_config = EnvConfig(os.environ.get('DEWI_ENV', self.DEFAULT_ENV))
+        self._config_dir_registry = ConfigDirRegistry(self._env_config)
 
         if command_class:
             self._command_classes.add(command_class)
@@ -142,8 +152,14 @@ class Application:
         self.load_plugins([name])
 
     def load_plugins(self, names: typing.List[str]):
-        loader = PluginLoader(self._command_registry)
+        loader = PluginLoader(self._command_registry, self._config_dir_registry)
         loader.load(names)
+
+    def register_config_directory(self, directory: str):
+        self.register_config_directories([directory])
+
+    def register_config_directories(self, directories: typing.List[str]):
+        self._config_dir_registry.register_config_directories(directories)
 
     def run(self, args: typing.List[str]):
         if self._command_class and len(self._command_classes) == 1:
@@ -164,6 +180,11 @@ class Application:
             self._process_debug_opts(ns)
             if self._process_logging_options(ns):
                 sys.exit(1)
+
+            if self._enable_env_options and ns.environment:
+                self._env_config.set_current_env(ns.environment)
+
+            self._load_env()
 
             if ns.cwd:
                 os.chdir(ns.cwd)
@@ -194,6 +215,11 @@ class Application:
         self._process_debug_opts(app_ns)
         if self._process_logging_options(app_ns):
             sys.exit(1)
+
+        if self._enable_env_options and app_ns.environment:
+            self._env_config.set_current_env(app_ns.environment)
+
+        self._load_env()
 
         try:
             if app_ns.cwd:
@@ -244,6 +270,8 @@ class Application:
         ns.command_registry_ = self._command_registry
         ns.program_name_ = self._program_name
         ns.single_command_ = single_command
+        ns.config_directories_ = list(self._config_dir_registry.config_directories)
+        ns.environment_ = self._env_config.current_env
         return ns
 
     def _register_app_args(self, parser: argparse.ArgumentParser):
@@ -259,6 +287,10 @@ class Application:
         if self._enable_short_debug_option:
             debug_opts.append('-d')
         parser.add_argument(*debug_opts, dest='debug_', action='store_true', help='Enable print/log debug messages')
+        if self._enable_env_options:
+            parser.add_argument('-e', '--environment', dest='environment',
+                                help=f'Specifies the environment to run the app '
+                                     f'under ({"/".join(sorted(self._env_config.available_envs))})')
 
         logging = parser.add_argument_group('Logging')
         logging.add_argument('--log-level', dest='log_level', help='Set log level, default: warning',
@@ -297,6 +329,9 @@ class Application:
             register_subcommands([], command, parser)
 
         return parser
+
+    def _load_env(self):
+        self._config_dir_registry.load_env()
 
     def _wait_for_termination_if_needed(self, app_ns):
         if app_ns.wait:

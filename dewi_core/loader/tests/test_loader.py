@@ -5,6 +5,7 @@ import collections
 
 import dewi_core.testcase
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.context import Context
 from dewi_core.loader.loader import PluginLoader, PluginLoaderError
 from dewi_core.loader.plugin import Plugin
@@ -84,7 +85,8 @@ class TestPluginO2(Plugin):
 class TestLoader(dewi_core.testcase.TestCase):
     def set_up(self):
         self.registry = CommandRegistry()
-        self.loader = PluginLoader(self.registry)
+        self.config_dir_registry = ConfigDirRegistry(EnvConfig('foo'))
+        self.loader = PluginLoader(self.registry, self.config_dir_registry)
 
     def test_that_context_command_registry_is_the_same_as_the_loader_s(self):
         context = self.loader.load({'dewi_core.loader.tests.test_loader.TestPlugin1'})

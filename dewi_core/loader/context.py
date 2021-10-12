@@ -4,6 +4,7 @@
 import collections.abc
 
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config_env import ConfigDirRegistry
 
 
 class ContextError(Exception):
@@ -28,10 +29,11 @@ class Context(collections.abc.Mapping):
     An example: a CommandRegistry object can be registered into this context.
     """
 
-    def __init__(self, command_registry: CommandRegistry):
+    def __init__(self, command_registry: CommandRegistry, config_dir_registry: ConfigDirRegistry):
         self._entries = {
             'commands': command_registry,
             'commandregistry': command_registry,
+            'config_dir_registry': config_dir_registry,
         }
 
     @property
@@ -41,6 +43,10 @@ class Context(collections.abc.Mapping):
     @property
     def commands(self) -> CommandRegistry:
         return self._entries['commands']
+
+    @property
+    def config_dir_registry(self) -> ConfigDirRegistry:
+        return self._entries['config_dir_registry']
 
     def register(self, name: str, value):
         """

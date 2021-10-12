@@ -2,16 +2,18 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 import dewi_core.testcase
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.context import Context, ContextEntryNotFound, ContextEntryAlreadyRegistered
 
 
 class ContextTest(dewi_core.testcase.TestCase):
     def set_up(self):
         self.registry = CommandRegistry()
-        self.context = Context(self.registry)
+        self.config_dir_registry = ConfigDirRegistry(EnvConfig('ttt'))
+        self.context = Context(self.registry, self.config_dir_registry)
 
     def test_that_context_is_almost_empty_initially(self):
-        self.assert_equal(2, len(self.context))
+        self.assert_equal(3, len(self.context))
 
     def test_register_an_element_and_can_be_queried(self):
         class Something:
@@ -19,7 +21,7 @@ class ContextTest(dewi_core.testcase.TestCase):
 
         a_thing = Something()
         self.context.register('a.name', a_thing)
-        self.assert_equal(3, len(self.context))
+        self.assert_equal(4, len(self.context))
         self.assert_in('a.name', self.context)
         self.assert_equal(a_thing, self.context['a.name'])
 
@@ -38,7 +40,7 @@ class ContextTest(dewi_core.testcase.TestCase):
         self.context.register('a.name', 42)
         self.assert_in('a.name', self.context)
         self.context.unregister('a.name')
-        self.assert_equal(2, len(self.context))
+        self.assert_equal(3, len(self.context))
         self.assert_not_in('a.name', self.context)
 
     def test_that_unregistering_unknown_entry_raises_exception(self):
@@ -52,4 +54,4 @@ class ContextTest(dewi_core.testcase.TestCase):
         for i in self.context:
             value.add(i)
 
-        self.assert_equal({'a', 'b', 'commands', 'commandregistry'}, value)
+        self.assert_equal({'a', 'b', 'commands', 'commandregistry', 'config_dir_registry'}, value)
