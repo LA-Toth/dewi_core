@@ -1,9 +1,8 @@
 # Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections.abc
-
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config.node import Node
 from dewi_core.config_env import ConfigDirRegistry
 
 
@@ -19,7 +18,7 @@ class ContextEntryAlreadyRegistered(ContextError):
     pass
 
 
-class Context(collections.abc.Mapping):
+class Context(Node):
     """
     A context is a generic purpose registry, which helps
     communicate between different parts of the code. Instead of a global variable
@@ -29,24 +28,12 @@ class Context(collections.abc.Mapping):
     An example: a CommandRegistry object can be registered into this context.
     """
 
+    RESERVED_KEYS = ['command_registry', 'commands', 'config_dir_registry']
+
     def __init__(self, command_registry: CommandRegistry, config_dir_registry: ConfigDirRegistry):
-        self._entries = {
-            'commands': command_registry,
-            'commandregistry': command_registry,
-            'config_dir_registry': config_dir_registry,
-        }
-
-    @property
-    def command_registry(self) -> CommandRegistry:
-        return self._entries['commandregistry']
-
-    @property
-    def commands(self) -> CommandRegistry:
-        return self._entries['commands']
-
-    @property
-    def config_dir_registry(self) -> ConfigDirRegistry:
-        return self._entries['config_dir_registry']
+        self.command_registry = command_registry
+        self.commands = command_registry
+        self.config_dir_registry = config_dir_registry
 
     def register(self, name: str, value):
         """
@@ -56,9 +43,9 @@ class Context(collections.abc.Mapping):
         :param name: the name of the new entry
         :param value: the value of the new entry
        """
-        if name in self._entries:
+        if name in self:
             raise ContextEntryAlreadyRegistered("Context entry {!r} already registered".format(name))
-        self._entries[name] = value
+        self[name] = value
 
     def unregister(self, name: str):
         """
@@ -67,22 +54,17 @@ class Context(collections.abc.Mapping):
         """
         self._check_entry(name)
 
-        del self._entries[name]
+        if name in self.RESERVED_KEYS:
+            raise ContextError(f'Reserved key {name} cannot be unregistered')
+        del self.__dict__[name]
 
     def _check_entry(self, name: str):
-        if name not in self._entries:
+        if name not in self:
             raise ContextEntryNotFound("Requested context entry {!r} is not registered".format(name))
-
-    def __len__(self):
-        return len(self._entries)
 
     def __getitem__(self, item):
         self._check_entry(item)
-
-        return self._entries[item]
+        return super().__getitem__(item)
 
     def __contains__(self, item):
-        return item in self._entries
-
-    def __iter__(self):
-        return iter(self._entries)
+        return item in self.__dict__
