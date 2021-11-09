@@ -1,7 +1,7 @@
 # Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import collections
+import collections.abc
 
 import dewi_core.testcase
 from dewi_core.commandregistry import CommandRegistry
@@ -14,7 +14,7 @@ from dewi_core.loader.plugin import Plugin
 class TestPlugin1(Plugin):
     """Sample description"""
 
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> collections.abc.Iterable:
         return ()
 
     def load(self, c: Context):
@@ -24,7 +24,7 @@ class TestPlugin1(Plugin):
 class TestPlugin2a(Plugin):
     """Sample description"""
 
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> collections.abc.Iterable:
         return ('dewi_core.loader.tests.test_loader.TestPlugin1',)
 
     def load(self, c: Context):
@@ -32,7 +32,7 @@ class TestPlugin2a(Plugin):
 
 
 class TestPlugin2b(Plugin):
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> collections.abc.Iterable:
         return ('dewi_core.loader.tests.test_loader.TestPlugin1',)
 
     def load(self, c: Context):
@@ -40,7 +40,7 @@ class TestPlugin2b(Plugin):
 
 
 class TestPlugin3(Plugin):
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> collections.abc.Iterable:
         return (
             'dewi_core.loader.tests.test_loader.TestPlugin2a',
             'dewi_core.loader.tests.test_loader.TestPlugin2b',
@@ -52,7 +52,7 @@ class TestPlugin3(Plugin):
 
 
 class TestPluginWithInvalidDependencies1(Plugin):
-    def get_dependencies(self) -> collections.Iterable:
+    def get_dependencies(self) -> collections.abc.Iterable:
         return (
             'dewi_core.loader2.tests2.test_loader2.TestPlugin1',
             'dewi_core.loader.tests.test_loader.TestPluginThatWillNeverExist',
