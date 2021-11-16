@@ -16,3 +16,8 @@ def save_to_yaml(cfg, output_file):
     else:
         with open(output_file, 'wt', encoding='UTF-8') as f:
             yaml.dump(cfg, stream=f, indent=4, default_flow_style=False)
+
+
+def load_yaml(filename: str):
+    with open(filename) as f:
+        return yaml.load(f, yaml.CLoader)
