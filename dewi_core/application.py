@@ -2,9 +2,11 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
+import collections.abc
 import os
 import sys
 import typing
+from gettext import gettext as _
 
 from dewi_core.command import Command
 from dewi_core.command import register_subcommands
@@ -15,6 +17,35 @@ from dewi_core.logger import LogLevel
 from dewi_core.logger import log_debug, create_logger_from_config, LoggerConfig
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
+
+
+def _arg_parser_check_value(self, action, value):
+    # converted value must be one of the choices (if specified)
+    if action.choices is not None and value not in action.choices:
+        names = get_similar_names_to(value, list(map(str, action.choices)))
+        args = {'value': value,
+                'choices': ', '.join(map(repr, action.choices)),
+                'similar_names': ', '.join(names),
+                'descs': ''}
+
+        if names:
+            msg = _('invalid choice: %(value)r (choose from %(choices)s) -- did you mean: %(similar_names)s?\n'
+                    '\nERROR: The subcommand %(value)r is not known.\n'
+                    '\nSimilar names:'
+                    '%(descs)s')
+            if isinstance(action.choices, collections.abc.Mapping) and isinstance(action.choices[names[0]],
+                                                                                  argparse.ArgumentParser):
+                for name in names:
+                    args['descs'] += f"\n  {name:25} -- {action.choices[name].description}"
+            else:
+                for name in names:
+                    args['descs'] += f'\n{name}'
+        else:
+            msg = _('invalid choice: %(value)r (choose from %(choices)s)')
+        raise argparse.ArgumentError(action, msg % args)
+
+
+argparse.ArgumentParser._check_value = _arg_parser_check_value
 
 
 def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Type[Command]:

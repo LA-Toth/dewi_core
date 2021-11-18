@@ -29,9 +29,10 @@ class SubCommand(Command):
             if not args.single_command_:
                 progname += f' {args.running_command_}'
             print("Missing subcommand.")
-            print("Try help:")
-            print(f"{progname} {' '.join(args.running_subcommands_)} --help")
-            log_error(f"Missing subcommand for {progname} {' '.join(args.running_subcommands_)}")
+            parser = argparse.ArgumentParser(f"{progname} {' '.join(args.running_subcommands_)}", description=self.description)
+            self.register_arguments(parser)
+            register_subcommands([args.running_command_] + args.running_subcommands_, self, parser)
+            parser.parse_args(['--help'])
         else:
             raise NotImplementedError()
 
@@ -49,7 +50,7 @@ def register_subcommands(prev_command_names: typing.List[str], command: Command,
 
     for subcommand_class in command.subcommand_classes:
         subcommand: Command = subcommand_class()
-        subparser = parsers.add_parser(subcommand.name, help=subcommand.description, aliases=subcommand.aliases)
+        subparser = parsers.add_parser(subcommand.name, description=subcommand.description, help=subcommand.description, aliases=subcommand.aliases)
         subcommand.register_arguments(subparser)
 
         if subcommand.subcommand_classes:
