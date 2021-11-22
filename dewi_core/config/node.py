@@ -29,11 +29,6 @@ class Node(collections.abc.MutableMapping):
     def __setitem__(self, key, value):
         return setattr(self, key, value)
 
-    def __setattr(self, key, value):
-        if key not in self:
-            raise KeyError(key)
-        super().__setattr__(key, value)
-
     def __iter__(self):
         return iter(self.__dict__)
 
@@ -45,6 +40,34 @@ class Node(collections.abc.MutableMapping):
 
     def load_from(self, data: dict):
         load_node(self, data)
+
+
+class SealableNode(Node):
+    SEALED_ATTR_NAME = '_sealed__'
+    _sealed__ = False
+
+    def _seal(self):
+        self._sealed__ = True
+
+    def _unseal(self):
+        self._sealed__ = False
+
+    def __setattr__(self, key, value):
+        if self._sealed__ and key not in self.__dict__:
+            raise KeyError(key)
+        super().__setattr__(key, value)
+
+    def __iter__(self):
+        return iter({x: y for x, y in self.__dict__.items() if x != self.SEALED_ATTR_NAME})
+
+    def __repr__(self):
+        return str({x: y for x, y in self.__dict__.items() if x != self.SEALED_ATTR_NAME})
+
+    def __contains__(self, item):
+        return item != self.SEALED_ATTR_NAME and item in self.__dict__
+
+    def load_from(self, data: dict):
+        load_node(self, data, sealed=self._sealed__)
 
 
 class NodeList(list):
@@ -63,11 +86,11 @@ class NodeList(list):
                 self.append(node)
 
 
-def load_node(node: Node, d: dict):
+def load_node(node: Node, d: dict, *, sealed: bool = False):
     for key, value in d.items():
         if key in node and isinstance(node[key], (Node, NodeList)):
             node[key].load_from(value)
-        else:
+        elif key in node or not sealed:
             node[key] = value
 
 
