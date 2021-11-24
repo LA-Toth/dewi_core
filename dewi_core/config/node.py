@@ -38,6 +38,9 @@ class Node(collections.abc.MutableMapping):
     def __repr__(self):
         return str(self.__dict__)
 
+    def __contains__(self, item):
+        return item in self.__dict__
+
     def load_from(self, data: dict):
         load_node(self, data)
 
