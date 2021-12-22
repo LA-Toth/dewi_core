@@ -2,50 +2,120 @@
 # Distributed under the terms of the GNU Lesser General Public License v3
 
 import argparse
-import collections.abc
 import os
 import sys
 import typing
-from gettext import gettext as _
 
+import click
+from click._unicodefun import _verify_python_env
+
+from dewi_core.appcontext import ApplicationContext
 from dewi_core.command import Command
-from dewi_core.command import register_subcommands
 from dewi_core.commandregistry import CommandRegistry
+from dewi_core.config.node import Node
 from dewi_core.config_env import EnvConfig, ConfigDirRegistry
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.logger import LogLevel
 from dewi_core.logger import log_debug, create_logger_from_config, LoggerConfig
+from dewi_core.optioncontext import OptionContext
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
 
 
-def _arg_parser_check_value(self, action, value):
-    # converted value must be one of the choices (if specified)
-    if action.choices is not None and value not in action.choices:
-        names = get_similar_names_to(value, list(map(str, action.choices)))
-        args = {'value': value,
-                'choices': ', '.join(map(repr, action.choices)),
-                'similar_names': ', '.join(names),
-                'descs': ''}
+def _dummy():
+    pass
 
-        if names:
-            msg = _('invalid choice: %(value)r (choose from %(choices)s) -- did you mean: %(similar_names)s?\n'
-                    '\nERROR: The subcommand %(value)r is not known.\n'
-                    '\nSimilar names:'
-                    '%(descs)s')
-            if isinstance(action.choices, collections.abc.Mapping) and isinstance(action.choices[names[0]],
-                                                                                  argparse.ArgumentParser):
-                for name in names:
-                    args['descs'] += f"\n  {name:25} -- {action.choices[name].description}"
+
+# the UTF-8 check is buggy, ignore it
+_verify_python_env.__code__ = _dummy.__code__
+
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
+class AliasedGroup(click.Group):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._command_registry: CommandRegistry = CommandRegistry()
+
+    def get_command(self, ctx, cmd_name):
+        if cmd_name in self._command_registry:
+            ctx.invoked_subcommand_ = cmd_name
+            return super().get_command(ctx,
+                                       self._command_registry.get_command_class_descriptor(cmd_name).get_class().name)
+        elif not self._command_registry.get_command_count():
+            rv = super().get_command(ctx, cmd_name)
+            if rv is not None:
+                return rv
             else:
-                for name in names:
-                    args['descs'] += f'\n{name}'
-        else:
-            msg = _('invalid choice: %(value)r (choose from %(choices)s)')
-        raise argparse.ArgumentError(action, msg % args)
+                ctx.fail(f'Unknown command name {cmd_name}')
+
+        print(f"ERROR: The command '{cmd_name}' is not known.\n")
+        similar_names = get_similar_names_to(cmd_name, sorted(self._command_registry.get_command_names()))
+
+        print('Similar names - firstly based on command name length:')
+        for name in similar_names:
+            print('  {:30s}   -- {}'.format(
+                name,
+                self._command_registry.get_command_class_descriptor(name).get_class().description))
+
+        return click.core.Command('dummy', callback=lambda: sys.exit(1))
+
+    def resolve_command(self, ctx, args):
+        # always return the full command name
+        _, cmd, args = super().resolve_command(ctx, args)
+        return cmd.name, cmd, args
+
+    def add_command(self, cmd, name=None):
+        if hasattr(cmd.callback, 'command_class'):
+            self._command_registry.register_class(cmd.callback.command_class)
+
+        super().add_command(cmd, name)
 
 
-argparse.ArgumentParser._check_value = _arg_parser_check_value
+def _wait_for_termination_if_needed(ctx: ApplicationContext):
+    if 'wait' in ctx.args and ctx.args.wait:
+        print("\nPress ENTER to continue")
+        input("")
+
+
+def _print_exception(ctx: ApplicationContext, exc: BaseException):
+    print_bt = 'print_backtraces' in ctx.args and ctx.args.print_backtraces
+    if print_bt or os.environ.get('DEWI_DEBUG', 0) == '1':
+        print_backtrace()
+    print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
+
+
+class AppGroup(AliasedGroup):
+    def main(self, *args, **kwargs):
+        try:
+            super().main(*args, **kwargs)
+        except SystemExit:
+            _wait_for_termination_if_needed(self.callback.app_context)
+            raise
+        except BaseException as exc:
+            _print_exception(self.callback.app_context, exc)
+            _wait_for_termination_if_needed(self.callback.app_context)
+            sys.exit(1)
+
+
+class AppCommand(click.Command):
+    def main(self, *args, **kwargs):
+        try:
+            super().main(*args, **kwargs)
+        except SystemExit:
+            _wait_for_termination_if_needed(self.callback.app_context)
+            raise
+        except BaseException as exc:
+            _print_exception(self.callback.app_context, exc)
+            _wait_for_termination_if_needed(self.callback.app_context)
+            sys.exit(1)
+
+
+def get_invoked_subommand(ctx: click.Context):
+    if hasattr(ctx, 'invoked_subcommand_'):
+        return ctx.invoked_subcommand_
+    else:
+        return ctx.invoked_subcommand
 
 
 def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Type[Command]:
@@ -135,16 +205,16 @@ class _ListAllCommand(Command):
     name = 'list-all'
     description = 'Lists all available command with aliases'
 
-    def run(self, args: argparse.Namespace):
-        _list_commands(args.program_name_, args.command_registry_, all_commands=True)
+    def run(self, ctx: ApplicationContext):
+        _list_commands(ctx.program_name, ctx.command_registry, all_commands=True)
 
 
 class _ListCommand(Command):
     name = 'list'
     description = 'Lists all available command with their names only'
 
-    def run(self, args: argparse.Namespace):
-        _list_commands(args.program_name_, args.command_registry_)
+    def run(self, ctx: ApplicationContext):
+        _list_commands(ctx.program_name, ctx.command_registry)
 
 
 class Application:
@@ -158,7 +228,7 @@ class Application:
                  version: typing.Optional[str] = None
                  ):
         self._program_name = program_name
-        self._command_class = command_class
+        self._command_class: typing.Optional[typing.Type[Command]] = command_class
         self._enable_short_debug_option = enable_short_debug_option if command_class is not None else True
         self._enable_env_options = enable_env_options if command_class is not None else True
         self._version = version
@@ -183,8 +253,12 @@ class Application:
         self.load_plugins([name])
 
     def load_plugins(self, names: typing.List[str]):
-        loader = PluginLoader(self._command_registry, self._config_dir_registry)
-        loader.load(names)
+        try:
+            loader = PluginLoader(self._command_registry, self._config_dir_registry)
+            loader.load(names)
+        except BaseException as exc:
+            _print_exception(ApplicationContext(), exc)
+            sys.exit(1)
 
     def register_config_directory(self, directory: str):
         self.register_config_directories([directory])
@@ -192,184 +266,140 @@ class Application:
     def register_config_directories(self, directories: typing.List[str]):
         self._config_dir_registry.register_config_directories(directories)
 
-    def run(self, args: typing.List[str]):
-        if self._command_class and len(self._command_classes) == 1:
-            return self.run_single_command(args)
-        else:
-            return self._run_with_multi_commands(args)
+    def run(self, args: typing.Optional[typing.List[str]] = None):
+        single_command_mode = bool(self._command_class and len(self._command_classes) == 1)
 
-    def run_single_command(self, args: typing.List[str]):
-        ns = argparse.Namespace()
-        ns.print_backtraces_ = False
-        ns.wait = False
-        try:
-            command = self._command_class()
-            parser = self._create_command_parser(command, self._program_name, register_app_args=True)
-            ns = self._create_command_ns(parser, args, command.name, single_command=True)
-            ns.cmd_class_ = self._command_class
+        app_context = ApplicationContext()
+        app_context.single_command_mode = single_command_mode
+        app_context.config_directories = list(self._config_dir_registry.config_directories)
+        app_context.environment = self._env_config.current_env
 
-            self._process_debug_opts(ns)
-            if self._process_logging_options(ns):
+        @click.pass_context
+        def app_run(ctx: click.Context, *args, **kwargs):
+            app_context.add_cmd_args('__main__', ctx.params, self._command_class.name if single_command_mode else '')
+            app_context.command_names.invoked_subcommand = get_invoked_subommand(ctx)
+            app_context.command_names.invoked_subcommand_primary_name = ctx.invoked_subcommand
+            app_context.current_args = Node.create_from(ctx.params)
+            ctx.obj = app_context
+            ctx.obj.command_registry = self._command_registry
+            ctx.obj.program_name = self._program_name
+            for k, v in kwargs.items():
+                ctx.obj.add_arg(k, v)
+            self._process_debug_opts(ctx.obj.args)
+            if self._process_logging_options(ctx.obj.args):
                 sys.exit(1)
 
-            if self._enable_env_options and ns.environment:
-                self._env_config.set_current_env(ns.environment)
+            if self._enable_env_options and ctx.obj.args.environment:
+                self._env_config.set_current_env(ctx.obj.args.environment)
 
             self._load_env()
 
-            if ns.cwd:
-                os.chdir(ns.cwd)
+            if single_command_mode:
+                app_context.command_names.current = self._command_class.name
+                res = self._command_class().run(app_context)
+                if ctx.invoked_subcommand is None or res:
+                    ctx.exit(res)
 
-            log_debug('Starting command', name=self._command_class.name)
-            sys.exit(command.run(ns))
+        app_run.app_context = app_context
 
-        except SystemExit:
-            self._wait_for_termination_if_needed(ns)
-            raise
-        except BaseException as exc:
-            self._print_exception(ns.print_backtraces_, exc)
-            self._wait_for_termination_if_needed(ns)
-            sys.exit(1)
+        app_click_helper = OptionContext()
+        app_click_helper.register_args(self._register_app_args)
+        if single_command_mode:
+            app_click_helper.register_args(self._command_class.register_arguments)
 
-    def _run_with_multi_commands(self, args: typing.List[str]):
-        parser = argparse.ArgumentParser(
-            prog=self._program_name,
-            usage='%(prog)s [options] [command [command-args]]')
-        self._register_app_args(parser)
+        app_run = app_click_helper.add_args_to_func(app_run)
 
-        parser.add_argument('command', nargs='?', help='Command to be run', default='list')
-        parser.add_argument(
-            'commandargs', nargs=argparse.REMAINDER, help='Additonal options and arguments of the specified command',
-            default=[], )
-        app_ns = parser.parse_args(args)
-
-        self._process_debug_opts(app_ns)
-        if self._process_logging_options(app_ns):
-            sys.exit(1)
-
-        if self._enable_env_options and app_ns.environment:
-            self._env_config.set_current_env(app_ns.environment)
-
-        self._load_env()
-
-        try:
-            if app_ns.cwd:
-                os.chdir(app_ns.cwd)
-            command_name = app_ns.command
+        if single_command_mode:
+            has_classes = len(self._command_class.subcommand_classes) > 0
+            app_run = (click.group if has_classes else click.command)(
+                self._program_name, help=self._command_class.description,
+                context_settings=CONTEXT_SETTINGS,
+                cls=(AppGroup if has_classes else AppCommand))(app_run)
+            self._register_subcommands(self._command_class.subcommand_classes, app_run, app_context)
+        else:
             self._command_registry.register_class(_ListAllCommand)
             self._command_registry.register_class(_ListCommand)
-            prog = '{} {}'.format(self._program_name, command_name)
 
-            if command_name in self._command_registry:
-                command_class = self._command_registry.get_command_class_descriptor(command_name).get_class()
-                command = command_class()
+            app_run = click.group(self._program_name, cls=AppGroup, context_settings=CONTEXT_SETTINGS)(app_run)
+            self._register_subcommands(self._command_registry._command_classes, app_run, app_context)
 
-                parser = self._create_command_parser(command, prog)
-                ns = self._create_command_ns(parser, app_ns.commandargs, command.name,
-                                             self._command_class is not None)
-                ns.debug_ = app_ns.debug_
-                ns.cmd_class_ = command_class
+        return app_run(args, self._program_name)
 
-                log_debug('Starting command', name=command_name)
-                sys.exit(command.run(ns))
+    def _register_subcommands(self, command_classes, parent_run_cmd, app_context: ApplicationContext):
+        for command_class in command_classes:
+            def wrapper():
+                c = command_class
 
-            else:
-                print(f"ERROR: The command '{command_name}' is not known.\n")
-                similar_names = get_similar_names_to(command_name, sorted(self._command_registry.get_command_names()))
+                @click.pass_context
+                def r(ctx: click.Context, *_, **kwargs):
+                    app_context.add_cmd_args(ctx.info_name, ctx.params)
+                    app_context.command_names.current = get_invoked_subommand(ctx.parent)
+                    app_context.command_names.invoked_subcommand = get_invoked_subommand(ctx)
+                    app_context.command_names.invoked_subcommand_primary_name = ctx.invoked_subcommand
+                    app_context.current_args = Node.create_from(ctx.params)
+                    for k, v in kwargs.items():
+                        ctx.obj.add_arg(k, v)
 
-                print('Similar names - firstly based on command name length:')
-                for name in similar_names:
-                    print('  {:30s}   -- {}'.format(
-                        name,
-                        self._command_registry.get_command_class_descriptor(name).get_class().description))
-                sys.exit(1)
+                    log_debug('Starting command', name=c.name)
+                    res = c().run(ctx.obj)
+                    if ctx.invoked_subcommand is None or res:
+                        ctx.exit(res)
 
-        except SystemExit:
-            self._wait_for_termination_if_needed(app_ns)
-            raise
-        except BaseException as exc:
-            self._print_exception(app_ns.print_backtraces_, exc)
-            self._wait_for_termination_if_needed(app_ns)
-            sys.exit(1)
+                r.command_class = c
 
-    def _create_command_ns(self, parser: argparse.ArgumentParser,
-                           args: typing.List[str], command_name: str,
-                           single_command: bool) -> argparse.Namespace:
-        ns = parser.parse_args(args)
-        ns.running_command_ = command_name
-        ns.parser_ = parser
-        ns.command_registry_ = self._command_registry
-        ns.program_name_ = self._program_name
-        ns.single_command_ = single_command
-        ns.config_directories_ = list(self._config_dir_registry.config_directories)
-        ns.environment_ = self._env_config.current_env
-        return ns
+                return r
 
-    def _register_app_args(self, parser: argparse.ArgumentParser):
+            cmd_helper = OptionContext()
+            cmd_helper.register_args(command_class.register_arguments)
+            cls = AliasedGroup if command_class.subcommand_classes else click.core.Command
+            cmd_run = parent_run_cmd.command(name=command_class.name, help=command_class.description, cls=cls,
+                                             context_settings=CONTEXT_SETTINGS)(
+                cmd_helper.add_args_to_func(wrapper()))
+            self._register_subcommands(command_class.subcommand_classes, cmd_run, app_context)
+
+    def _register_app_args(self, h: OptionContext):
         if self._version:
-            parser.add_argument('--version', action='version', version=f'%(prog)s {self._version}')
-        parser.add_argument('--cwd', dest='cwd', help='Change to specified directory')
-        parser.add_argument('--wait', action='store_true', help='Wait for user input before terminating application')
-        parser.add_argument(
-            '--print-backtraces', action='store_true', dest='print_backtraces_',
+            h.add_custom_decorator(lambda: click.version_option(self._version))
+
+        h.add_option('--cwd', dest='cwd', help='Change to specified directory')
+        h.add_option('--wait', is_flag=True, help='Wait for user input before terminating application')
+        h.add_option(
+            '--print-backtraces', dest='print_backtraces', is_flag=True,
             help='Print backtraces of the exceptions')
 
         debug_opts = ['--debug']
         if self._enable_short_debug_option:
-            debug_opts.append('-d')
-        parser.add_argument(*debug_opts, dest='debug_', action='store_true', help='Enable print/log debug messages')
+            debug_opts.insert(0, '-d')
+        h.add_option(*debug_opts, dest='debug', is_flag=True, help='Enable print/log debug messages')
         if self._enable_env_options:
-            parser.add_argument('-e', '--environment', dest='environment',
-                                help=f'Specifies the environment to run the app '
-                                     f'under ({"/".join(sorted(self._env_config.available_envs))})')
+            h.add_option('-e', '--environment', dest='environment',
+                         help=f'Specifies the environment to run the app '
+                              f'under ({"/".join(sorted(self._env_config.available_envs))})')
 
-        logging = parser.add_argument_group('Logging')
-        logging.add_argument('--log-level', dest='log_level', help='Set log level, default: warning',
-                             choices=[i.name.lower() for i in LogLevel], default='info')
-        logging.add_argument('--log-syslog', dest='log_syslog', action='store_true',
-                             help='Log to syslog. Can be combined with other log targets')
-        logging.add_argument('--log-console', '--log-stdout', dest='log_console', action='store_true',
-                             help='Log to STDOUT, the console. Can be combined with other targets.'
-                                  'If no target is specified, this is used as default.')
-        logging.add_argument('--log-file', dest='log_file', action='append',
-                             help='Log to a file. Can be specified multiple times and '
-                                  'can be combined with other options.')
-        logging.add_argument('--no-log', '-l', dest='log_none', action='store_true',
-                             help='Disable logging. If this is set, other targets are invalid.')
+        logging = h.add_group('Logging')
+        logging.add_option('--log-level', dest='log_level', help='Set log level, default: warning',
+                           type=click.Choice([i.name.lower() for i in LogLevel]), default='info')
+        logging.add_option('--log-syslog', dest='log_syslog', is_flag=True,
+                           help='Log to syslog. Can be combined with other log targets')
+        logging.add_option('--log-console', '--log-stdout', dest='log_console', is_flag=True,
+                           help='Log to STDOUT, the console. Can be combined with other targets.'
+                                'If no target is specified, this is used as default.')
+        logging.add_option('--log-file', dest='log_file', multiple=True,
+                           help='Log to a file. Can be specified multiple times and '
+                                'can be combined with other options.')
+        logging.add_option('--no-log', '-l', dest='log_none', is_flag=True,
+                           help='Disable logging. If this is set, other targets are invalid.')
 
-    def _process_debug_opts(self, ns: argparse.Namespace):
-        if ns.debug_ or os.environ.get('DEWI_DEBUG', 0) == '1':
-            ns.print_backtraces_ = True
+    def _process_debug_opts(self, ns: Node):
+        if ns.debug or os.environ.get('DEWI_DEBUG', 0) == '1':
+            ns.print_backtraces = True
             ns.log_level = 'debug'
             ns.debug_ = True
 
-    def _process_logging_options(self, args: argparse.Namespace):
+    def _process_logging_options(self, args: Node):
         return create_logger_from_config(
             LoggerConfig.create(self._program_name, args.log_level, args.log_none, args.log_syslog, args.log_console,
                                 args.log_file))
 
-    def _create_command_parser(self, command: Command, prog: str, *, register_app_args: bool = False):
-        parser = argparse.ArgumentParser(
-            description=command.description,
-            prog=prog)
-        parser.set_defaults(running_subcommands_=[])
-        if register_app_args:
-            self._register_app_args(parser)
-        command.register_arguments(parser)
-        if command.subcommand_classes:
-            register_subcommands([], command, parser)
-
-        return parser
-
     def _load_env(self):
         self._config_dir_registry.load_env()
-
-    def _wait_for_termination_if_needed(self, app_ns):
-        if app_ns.wait:
-            print("\nPress ENTER to continue")
-            input("")
-
-    def _print_exception(self, print_bt: bool, exc: BaseException):
-        if print_bt or os.environ.get('DEWI_DEBUG', 0) == '1':
-            print_backtrace()
-        print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)

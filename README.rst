@@ -54,11 +54,12 @@ The exact plugin can be hidden if there is a main entry point or script:
     #!/usr/bin/env python3
     import sys
 
-    from dewi_core.application import SimpleApplication
+    from dewi_core.application import Application
 
 
     def main():
-        app = SimpleApplication('steven', 'steven.StevenPlugin')
+        app = Application('steven')
+        app.add_plugin('steven.StevenPlugin')
         app.run(sys.argv[1:])
 
 

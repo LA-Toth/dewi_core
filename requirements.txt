@@ -1,3 +1,6 @@
+click
+click_option_group
 coverage
 nose
 pylint
+pyyaml

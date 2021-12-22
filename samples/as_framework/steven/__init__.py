@@ -12,7 +12,7 @@ class StevenPlugin(Plugin):
 
     def get_dependencies(self) -> collections.Iterable:
         return {
-            'dewi_commands.commands.CommandsPlugin',
+            #'dewi_commands.commands.CommandsPlugin',
             'steven.commands.CommandsPlugin',
         }
 
