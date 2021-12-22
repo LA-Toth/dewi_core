@@ -20,38 +20,6 @@ class Node(collections.abc.MutableMapping):
     >>> c.set('root', A())
     """
 
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, value):
-        return setattr(self, key, value)
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __delitem__(self, key):
-        raise RuntimeError('Unable to delete key {}'.format(key))
-
-    def __repr__(self):
-        return str(self.__dict__)
-
-    def __contains__(self, item):
-        return item in self.__dict__
-
-    def load_from(self, data: dict):
-        load_node(self, data)
-
-    @classmethod
-    def create_from(cls, data: dict):
-        n = cls()
-        n.load_from(data)
-        return n
-
-
-class SealableNode(Node):
     SEALED_ATTR_NAME = '_sealed__'
     _sealed__ = False
 
@@ -61,6 +29,15 @@ class SealableNode(Node):
     def _unseal(self):
         self._sealed__ = False
 
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        return setattr(self, key, value)
+
     def __setattr__(self, key, value):
         if self._sealed__ and key not in self.__dict__:
             raise KeyError(key)
@@ -68,6 +45,9 @@ class SealableNode(Node):
 
     def __iter__(self):
         return iter({x: y for x, y in self.__dict__.items() if x != self.SEALED_ATTR_NAME})
+
+    def __delitem__(self, key):
+        raise RuntimeError('Unable to delete key {}'.format(key))
 
     def __repr__(self):
         return str({x: y for x, y in self.__dict__.items() if x != self.SEALED_ATTR_NAME})
@@ -77,6 +57,15 @@ class SealableNode(Node):
 
     def load_from(self, data: dict):
         load_node(self, data, sealed=self._sealed__)
+
+    @classmethod
+    def create_from(cls, data: dict):
+        n = cls()
+        n.load_from(data)
+        return n
+
+
+SealableNode = Node
 
 
 class NodeList(list):
