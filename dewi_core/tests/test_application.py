@@ -1,17 +1,18 @@
 # Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the GNU Lesser General Public License v3
 
-import argparse
 import os.path
 import re
 import typing
 from unittest.mock import patch
 
 import dewi_core.testcase
+from dewi_core.appcontext import ApplicationContext
 from dewi_core.application import Application
 from dewi_core.command import Command
 from dewi_core.context_managers import redirect_outputs
 from dewi_core.tests.common import test_env, DATA_DIR
+from dewi_core.utils.clickhelper import ClickHelper
 
 
 class FakeCommand(Command):
@@ -23,11 +24,12 @@ class FakeCommand(Command):
     def __init__(self):
         FakeCommand.arguments = None
 
-    def register_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument('arguments', nargs='*')
+    @staticmethod
+    def register_arguments(c: ClickHelper) -> None:
+        c.add_argument('arguments', nargs=-1)
 
-    def run(self, args: argparse.Namespace) -> int:
-        arguments = args.arguments
+    def run(self, ctx: ApplicationContext) -> int:
+        arguments = ctx.args.arguments
 
         if arguments and arguments[0] == 'ERROR':
             raise RuntimeError("Fake Command Error")
@@ -63,8 +65,8 @@ class InvokableApplicationTest(dewi_core.testcase.TestCase):
 
 class InvokableAppWithCommandTest(InvokableApplicationTest):
     def assert_help_option(self, *, suffix: typing.Optional[str] = None):
-        suffix = suffix or '[options] [command [command-args]]'
-        redirect = self._invoke_application_redirected(['-h'], expected_exit_value=0)
+        suffix = suffix or '[OPTIONS] [ARGUMENTS]'
+        redirect = self._invoke_application_redirected(['--help'], expected_exit_value=0)
         self.assert_in(f'{self.APP_NAME} {suffix}', redirect.stdout.getvalue())
         self.assert_equal('', redirect.stderr.getvalue())
 
@@ -104,7 +106,7 @@ class ApplicationTest(InvokableAppWithCommandTest):
         self.application.add_command_class(FakeCommand)
 
     def test_help_option(self):
-        self.assert_help_option()
+        self.assert_help_option(suffix='[OPTIONS] COMMAND [ARGS]')
 
     def test_that_a_command_name_is_requiredto_run(self):
         self.assert_list_command()
@@ -165,9 +167,9 @@ class ApplicationTest(InvokableAppWithCommandTest):
 
     def test_run_help_of_command(self):
         redirect = self._invoke_application_redirected(
-            ['fake', '-h'],
+            ['fake', '--help'],
             expected_exit_value=0)
-        self.assert_in(f'{self.APP_NAME} fake [-h]', redirect.stdout.getvalue())
+        self.assert_in(f'{self.APP_NAME} fake [OPTIONS]', redirect.stdout.getvalue())
         self.assert_equal('', redirect.stderr.getvalue())
 
 
@@ -179,7 +181,7 @@ class SingleCommandApplicationTest(InvokableAppWithCommandTest):
         self.application = Application(self.APP_NAME, FakeCommand)
 
     def test_help_option(self):
-        self.assert_help_option(suffix='[-h] [--cwd CWD] [--wait]')
+        self.assert_help_option()
 
     def test_command_run_method_is_called(self):
         self.assert_fake_command_run([])

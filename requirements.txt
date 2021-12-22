@@ -1,3 +1,5 @@
+click
 coverage
 nose
 pylint
+pyyaml

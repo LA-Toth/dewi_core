@@ -52,5 +52,6 @@ setup(
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     install_requires=[
         'pyyaml',
+        'click>=8.0'
     ]
 )
