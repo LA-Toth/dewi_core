@@ -104,6 +104,7 @@ class CommandRegistry:
 
     def __init__(self):
         self._registry = dict()
+        self._command_classes: typing.List[typing.Type[Command]] = []
 
     def _validate_name_and_class_descriptor(self, name: str, class_descriptor: ClassDescriptor):
         if name in self._registry:
@@ -122,6 +123,7 @@ class CommandRegistry:
         self.register_command_class(command_class.name, desc)
         for alias in command_class.aliases:
             self.register_command_class(alias, desc)
+        self._command_classes.append(command_class)
 
     def get_command_class_descriptor(self, name: str) -> ClassDescriptor:
         if name not in self._registry:
