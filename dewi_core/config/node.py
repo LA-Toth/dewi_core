@@ -44,6 +44,12 @@ class Node(collections.abc.MutableMapping):
     def load_from(self, data: dict):
         load_node(self, data)
 
+    @classmethod
+    def create_from(cls, data: dict):
+        n = cls()
+        n.load_from(data)
+        return n
+
 
 class SealableNode(Node):
     SEALED_ATTR_NAME = '_sealed__'
