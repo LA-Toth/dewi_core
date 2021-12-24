@@ -65,9 +65,6 @@ class Node(collections.abc.MutableMapping):
         return n
 
 
-SealableNode = Node
-
-
 class NodeList(list):
     def __init__(self, member_type: typing.Type[Node]):
         super().__init__()
