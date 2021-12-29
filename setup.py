@@ -19,7 +19,7 @@ setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
     license="LGPLv3",
-    version="4.0.0",
+    version="5.0.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",
@@ -40,6 +40,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
@@ -51,7 +52,7 @@ setup(
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     install_requires=[
         'pyyaml',
-        'click>=8.0',
+        'click >=8.0, <9',
         'click_option_group',
     ]
 )

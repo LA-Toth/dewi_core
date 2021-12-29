@@ -1,3 +1,21 @@
+5.0.0
+  - add support of versioning - Application's version param, and if set,
+    the --version command-line option
+  - add Rails-like environment and config dir support, env var is DEWI_ENV
+  - loader Context is Node-based
+  - add IniConfig and DictConfigParser - moved from dewi-utils
+  - add AppConfig to have app-wide global config - projects, work dir (workspace dir)
+  - add find_file_recursively - moved from dewi-utils
+  - add support of extensible projects
+  - yaml: add load_yaml wrapper; save_to_yaml's second args is optional; stdout ('-') is the default
+  - node.Node:
+      * it's sealable by subclasses with _seal() class; use _unseal() for further extensions
+      * add __contains__ (`'something' in the_node`)
+      * add create_from(cls, data: dict) class method
+  - add dewi_core/utils/log_dict.py with log_debug_dict()
+  - rewrite Application, Command, etc. to use click package instead of argparse
+  - relicense under the terms of Apache License v2.0
+
 4.0.0
   - add support of remoting by (de)serializing Namespace and run
     the current command (eg. via SSH on a remote server)
