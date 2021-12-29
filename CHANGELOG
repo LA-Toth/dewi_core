@@ -1,3 +1,7 @@
+5.0.1
+  - follow-up a change in pyyaml, CLoader may be Loader without C
+  - small fix for Python 3.10 (collections -> collections.abc.Mapping)
+
 5.0.0
   - add support of versioning - Application's version param, and if set,
     the --version command-line option
