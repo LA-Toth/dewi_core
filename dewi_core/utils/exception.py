@@ -1,5 +1,5 @@
-# Copyright 2015-2020 Laszlo Attila Toth
-# Distributed under the terms of the GNU Lesser General Public License v3
+# Copyright 2015-2021 Laszlo Attila Toth
+# Distributed under the terms of the Apache License, Version 2.0
 
 import sys
 import traceback

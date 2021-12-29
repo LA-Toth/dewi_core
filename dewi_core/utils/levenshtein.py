@@ -1,6 +1,5 @@
-# Copyright 2018-2020 Tóth, László Attila
-# Distributed under the terms of the GNU Lesser General Public License v3
-# The license can be found in COPYING file or on http://www.gnu.org/licenses/
+# Copyright 2018-2021 Tóth, László Attila
+# Distributed under the terms of the Apache License, Version 2.0
 
 # R0913: too many argument
 # R0914: too many locals (get_similar_names_to)

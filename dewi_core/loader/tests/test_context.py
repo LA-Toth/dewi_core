@@ -1,5 +1,5 @@
 # Copyright 2015-2021 Laszlo Attila Toth
-# Distributed under the terms of the GNU Lesser General Public License v3
+# Distributed under the terms of the Apache License, Version 2.0
 import dewi_core.testcase
 from dewi_core.commandregistry import CommandRegistry
 from dewi_core.config_env import ConfigDirRegistry, EnvConfig
