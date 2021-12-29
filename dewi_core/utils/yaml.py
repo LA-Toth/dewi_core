@@ -7,6 +7,12 @@ import typing
 
 import yaml
 
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
+
 if os.environ.get('DEWI_YAML_WITH_ALIASES', '0') == '0':
     yaml.Dumper.ignore_aliases = lambda *args: True
 
@@ -25,4 +31,4 @@ def print_as_yaml(cfg):
 
 def load_yaml(filename: str):
     with open(filename) as f:
-        return yaml.load(f, yaml.CLoader)
+        return yaml.load(f, yaml.Loader)
