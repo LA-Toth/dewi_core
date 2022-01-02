@@ -13,10 +13,9 @@ from dewi_core.appcontext import ApplicationContext
 from dewi_core.command import Command
 from dewi_core.commandregistry import CommandRegistry
 from dewi_core.config.node import Node
-from dewi_core.config_env import EnvConfig, ConfigDirRegistry
+from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.loader import PluginLoader
-from dewi_core.logger import LogLevel
-from dewi_core.logger import log_debug, create_logger_from_config, LoggerConfig
+from dewi_core.logger import LogLevel, LoggerConfig, create_logger_from_config, log_debug
 from dewi_core.optioncontext import OptionContext
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
@@ -223,12 +222,14 @@ class Application:
     def __init__(self, program_name: str,
                  command_class: typing.Optional[typing.Type[Command]] = None,
                  *,
+                 description: typing.Optional[str] = None,
                  enable_short_debug_option: bool = False,
                  enable_env_options: bool = True,
                  version: typing.Optional[str] = None
                  ):
         self._program_name = program_name
         self._command_class: typing.Optional[typing.Type[Command]] = command_class
+        self._description = description
         self._enable_short_debug_option = enable_short_debug_option if command_class is not None else True
         self._enable_env_options = enable_env_options if command_class is not None else True
         self._version = version
@@ -312,7 +313,8 @@ class Application:
         if single_command_mode:
             has_classes = len(self._command_class.subcommand_classes) > 0
             app_run = (click.group if has_classes else click.command)(
-                self._program_name, help=self._command_class.description,
+                self._program_name,
+                help=self._description or self._command_class.description,
                 context_settings=CONTEXT_SETTINGS,
                 cls=(AppGroup if has_classes else AppCommand))(app_run)
             self._register_subcommands(self._command_class.subcommand_classes, app_run, app_context)
@@ -320,7 +322,10 @@ class Application:
             self._command_registry.register_class(_ListAllCommand)
             self._command_registry.register_class(_ListCommand)
 
-            app_run = click.group(self._program_name, cls=AppGroup, context_settings=CONTEXT_SETTINGS)(app_run)
+            app_run = click.group(self._program_name, cls=AppGroup,
+                                  help=self._description,
+                                  context_settings=CONTEXT_SETTINGS,
+                                  )(app_run)
             self._register_subcommands(self._command_registry._command_classes, app_run, app_context)
 
         return app_run(args, self._program_name)
