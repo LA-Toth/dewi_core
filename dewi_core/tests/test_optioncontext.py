@@ -36,6 +36,10 @@ class _InvokableTestBase(dewi_core.testcase.TestCase):
     def _dummy(*_, **_kw):
         pass
 
+    def assert_empty_redirection(self, r):
+        self.assert_equal('', r.stdout.getvalue())
+        self.assert_equal('', r.stderr.getvalue())
+
 
 class OptionContextTest(_InvokableTestBase):
 
@@ -72,3 +76,86 @@ class OptionContextTest(_InvokableTestBase):
                            'grp2arg': False, 'opt3': False}, params)
         self.assert_equal('', r.stdout.getvalue())
         self.assert_equal('', r.stderr.getvalue())
+
+
+class OptionContextWithNestedGroupsTest(_InvokableTestBase):
+
+    def set_up(self):
+        self.tested = OptionContext()
+        db = self.tested.add_mutually_exclusive_group('Database settings', required=True)
+        db.add_option('--config-file')
+        settings = db.add_group(require_all=True)
+        pw = settings.add_mutually_exclusive_group()
+        pw.add_option('--password')
+        pw.add_option('--password-file')
+        settings.add_option('--host')
+        settings.add_option('--port', type=int)
+        self.params = {}
+
+    def f(self, p):
+        self.params = p
+
+    def test_help(self):
+        r = self._invoke_redirected(self.tested, self._dummy, self.HELP_ARGS, expected_exit_value=0)
+        self.assert_equal('', r.stderr.getvalue())
+
+    def test_top_level_xgrp_regular_param(self):
+        r = self._invoke_redirected(self.tested, self.f, ['--config-file', 'ff'], expected_exit_value=0)
+        self.assert_empty_redirection(r)
+        self.assert_equal({'config_file': 'ff',
+                           'host': None,
+                           'password': None,
+                           'password_file': None,
+                           'port': None},
+                          self.params)
+
+    def test_top_level_xgrp_requires_single_option(self):
+        r = self._invoke_redirected(self.tested, self.f, [], expected_exit_value=2)
+        self.assert_equal('', r.stdout.getvalue())
+        self.assert_in("'--config-file'", r.stderr.getvalue())
+
+    def test_top_level_xgrp_requires_all_suboptions1(self):
+        r = self._invoke_redirected(self.tested, self.f, ['--host', 'x'], expected_exit_value=2)
+        self.assert_equal('', r.stdout.getvalue())
+        self.assert_in("'--port", r.stderr.getvalue())
+
+    def test_top_level_xgrp_requires_all_suboptions2(self):
+        r = self._invoke_redirected(self.tested, self.f, ['--host', 'x', '--port', '42'], expected_exit_value=2)
+        self.assert_equal('', r.stdout.getvalue())
+        self.assert_in("'--password", r.stderr.getvalue())
+
+    def test_top_level_xgrp_pass_if_all_suboptions_set(self):
+        r = self._invoke_redirected(self.tested, self.f, ['--host', 'example', '--port', '42', '--password', 'foo'],
+                                    expected_exit_value=0)
+        self.assert_empty_redirection(r)
+        self.assert_equal({'config_file': None,
+                           'host': 'example',
+                           'password': 'foo',
+                           'password_file': None,
+                           'port': 42},
+                          self.params)
+
+
+class NestedGroupsDontAllowSameSubGroup(dewi_core.testcase.TestCase):
+    def test_option_context_add_group_cant_have_subgroup(self):
+        tested = OptionContext().add_group()
+        self.assert_false(hasattr(tested, 'add_group'))
+        self.assert_false(hasattr(tested, 'add_mutually_exclusive_group'))
+
+    def test_group_can_only_have_mutually_exclusive_group(self):
+        tested = OptionContext().add_multilevel_group()
+        self.assert_false(hasattr(tested, 'add_group'))
+        self.assert_true(hasattr(tested, 'add_mutually_exclusive_group'))
+
+    def test_mutually_exclusive_group_cant_have_same_group(self):
+        tested = OptionContext().add_mutually_exclusive_group()
+        self.assert_true(hasattr(tested, 'add_group'))
+        self.assert_false(hasattr(tested, 'add_mutually_exclusive_group'))
+
+    def test_deep_hierarchy_keeps_different_subgroup_invariant(self):
+        tested = OptionContext().add_multilevel_group().add_mutually_exclusive_group()
+        self.assert_true(hasattr(tested, 'add_group'))
+        self.assert_false(hasattr(tested, 'add_mutually_exclusive_group'))
+        tested = OptionContext().add_mutually_exclusive_group().add_group()
+        self.assert_false(hasattr(tested, 'add_group'))
+        self.assert_true(hasattr(tested, 'add_mutually_exclusive_group'))
