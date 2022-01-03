@@ -14,7 +14,7 @@ grep -R 'import argparse' $DIR | cut -f1 -d: | uniq |
 grep -R 'def run(self, args: argparse.Namespace)' $DIR | cut -f1 -d: | uniq |
   xargs sed -ri 's/def run.self, args: argparse.Namespace./def run(self, ctx: ApplicationContext)/'
 
-grep -R 'def run(self, args: argparse.Namespace)'$DIR | cut -f1 -d: | uniq |
+grep -R 'def run(self, args: argparse.Namespace)' $DIR | cut -f1 -d: | uniq |
   xargs sed -ri 's/def run.self, args: argparse.Namespace./def run(self, ctx: ApplicationContext)/'
 
 grep -R 'def register_arguments(self' $DIR | cut -f1 -d: | uniq |
@@ -29,3 +29,7 @@ grep -R 'parser.add_argument(' $DIR | cut -f1 -d: | uniq |
 
 grep -R ', action=.store_true.' $DIR | cut -f1 -d: | uniq |
   xargs sed -ri 's/action=.store_true./is_flag=True/'
+
+
+grep -R 'SealableNode' $DIR | cut -f1 -d: | uniq |
+  xargs sed -ri 's/SealableNode/Node/g'
