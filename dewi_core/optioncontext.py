@@ -170,6 +170,9 @@ class _Base:
         if 'dest' in kwargs:
             args = (*args, kwargs['dest'])
             del kwargs['dest']
+        if 'choices' in kwargs:
+            kwargs['type'] = click.Choice(kwargs['choices'])
+            del kwargs['choices']
 
         self._callbacks.append(lambda: decorator(*args, **kwargs))
 
@@ -275,6 +278,9 @@ class OptionContext(_Base):
         """
         if 'help' in kwargs:
             del kwargs['help']
+        if 'choices' in kwargs:
+            kwargs['type'] = click.Choice(kwargs['choices'])
+            del kwargs['choices']
 
         self._callbacks.append(lambda: click.argument(*args, **kwargs))
 
