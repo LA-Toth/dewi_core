@@ -303,12 +303,20 @@ class Application:
 
         app_run.app_context = app_context
 
-        app_click_helper = OptionContext()
-        app_click_helper.register_args(self._register_app_args)
+        app_opt_ctx = OptionContext()
+        app_opt_ctx.register_args(self._register_app_args)
         if single_command_mode:
-            app_click_helper.register_args(self._command_class.register_arguments)
+            app_opt_ctx.register_args(self._command_class.register_arguments)
 
-        app_run = app_click_helper.add_args_to_func(app_run)
+        try:
+            app_run = app_opt_ctx.add_args_to_func(app_run)
+        except Exception as e:
+            if single_command_mode:
+                suffix = f'for command `{self._command_class.name}`'
+            else:
+                suffix = 'for the application'
+            print(f'Error occurred while registering args {suffix}: {e}')
+            raise
 
         if single_command_mode:
             has_classes = len(self._command_class.subcommand_classes) > 0
@@ -354,13 +362,17 @@ class Application:
 
                 return r
 
-            cmd_helper = OptionContext()
-            cmd_helper.register_args(command_class.register_arguments)
-            cls = AliasedGroup if command_class.subcommand_classes else click.core.Command
-            cmd_run = parent_run_cmd.command(name=command_class.name, help=command_class.description, cls=cls,
-                                             context_settings=CONTEXT_SETTINGS)(
-                cmd_helper.add_args_to_func(wrapper()))
-            self._register_subcommands(command_class.subcommand_classes, cmd_run, app_context)
+            try:
+                cmd_opt_ctx = OptionContext()
+                cmd_opt_ctx.register_args(command_class.register_arguments)
+                cls = AliasedGroup if command_class.subcommand_classes else click.core.Command
+                cmd_run = parent_run_cmd.command(name=command_class.name, help=command_class.description, cls=cls,
+                                                 context_settings=CONTEXT_SETTINGS)(
+                    cmd_opt_ctx.add_args_to_func(wrapper()))
+                self._register_subcommands(command_class.subcommand_classes, cmd_run, app_context)
+            except Exception as e:
+                print(f'Error occurred while registering args for command `{command_class.name}`: {e}')
+                raise
 
     def _register_app_args(self, h: OptionContext):
         if self._version:
