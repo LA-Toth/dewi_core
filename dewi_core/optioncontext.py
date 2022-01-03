@@ -153,6 +153,8 @@ class _RequiredMutuallyExclusiveOptionGroup(MutuallyExclusiveOptionGroup, _Optio
         if len(given_option_names) == 0:
             group_name = self._group_name_str()
             option_info = self.get_error_hint(ctx)
+            if self._extgrp._groups:
+                option_info += '\n  ' + 'one or more groups, check --help'
 
             raise click.UsageError(
                 "Missing one of the required mutually exclusive options from "
