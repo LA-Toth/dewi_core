@@ -1,7 +1,6 @@
 # Copyright 2015-2021 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
-import argparse
 import os
 import sys
 import typing
@@ -117,9 +116,9 @@ def get_invoked_subommand(ctx: click.Context):
         return ctx.invoked_subcommand
 
 
-def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Type[Command]:
+def get_command_from_plugin_appcontext(plugin_name: str, ctx: ApplicationContext) -> typing.Type[Command]:
     """
-    Returns the command  class specified in the ns namespace via its running_command_
+    Returns the command  class specified in the ctx ApplicationContext via its running_command_
     and running_subcommands_ members.
 
     The ns comes from an already parsed namespace, especially via
@@ -127,34 +126,32 @@ def get_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typi
 
     The command must exist.
 
-    :param plugin_name: The command plugin or app plugin containing the command referred by ns.running_command_
-    :param ns: the prepared Namespace object
-    :return: the command class based on ns.
+    :param plugin_name: The command plugin or app plugin containing the command referrered in ctx
+    :param ctx: the prepared ApplicationContext object
+    :return: the command class based on ctx.
     """
     command_registry = CommandRegistry()
-    cfg_dir_registry = ConfigDirRegistry(EnvConfig(ns.environment_))
-    cfg_dir_registry.register_config_directories(ns.config_directories_)
+    cfg_dir_registry = ConfigDirRegistry(EnvConfig(ctx.environment))
+    cfg_dir_registry.register_config_directories(ctx.config_directories)
     loader = PluginLoader(command_registry, cfg_dir_registry)
     loader.load([plugin_name])
     cfg_dir_registry.load_env()
-    cmd_class = command_registry.get_command_class_descriptor(ns.running_command_).get_class()
+    cmd_class = command_registry.get_command_class_descriptor(ctx.command_names.command).get_class()
 
-    if 'running_subcommands_' in ns and ns.running_subcommands_:
-        for sub_cmd_name in ns.running_subcommands_:
+    if ctx.command_names.subcommands:
+        for sub_cmd_name in ctx.command_names.subcommands:
             for cc in cmd_class.subcommand_classes:
                 if cc.name == sub_cmd_name:
                     cmd_class = cc
 
-    ns.cmd_class_ = cmd_class
-
     return cmd_class
 
 
-def run_command_from_plugin_ns(plugin_name: str, ns: argparse.Namespace) -> typing.Optional[int]:
+def run_command_from_appcontext(plugin_name: str, ctx: ApplicationContext) -> typing.Optional[int]:
     """
-    Runs the command returned by get_command_from_plugin_ns(). See that function.
+    Runs the command returned by get_command_from_plugin_appcontext(). See that function.
     """
-    return get_command_from_plugin_ns(plugin_name, ns)().run(ns)
+    return get_command_from_plugin_appcontext(plugin_name, ctx)().run(ctx)
 
 
 def _list_commands(prog_name: str, command_registry: CommandRegistry, *, all_commands: bool = False):

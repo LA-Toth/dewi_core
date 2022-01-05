@@ -1,20 +1,16 @@
 # Copyright 2021 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
-import argparse
 import copy
 import typing
 
+from dewi_core.appcontext import ApplicationContext
 
-def serialize_argparse_namespace(ns: argparse.Namespace,
-                                 app_specific_keys: typing.Optional[typing.List[str]] = None) \
+
+def serialize_application_context(ctx: ApplicationContext) \
         -> typing.Dict[str, typing.Any]:
-    return copy.deepcopy({k: v for k, v in ns.__dict__.items() if
-                          k not in ['func', 'parser_', 'context_', 'cmd_remote'] + (app_specific_keys or [])})
+    return copy.deepcopy({k: v for k, v in ctx if k != 'command_registry'})
 
 
-def deserialize_argparse_namespace(args: typing.Dict[str, typing.Any]) -> argparse.Namespace:
-    ns = argparse.Namespace()
-    for k, v in args.items():
-        setattr(ns, k, v)
-    return ns
+def deserialize_application_context(serialized: typing.Dict[str, typing.Any]) -> ApplicationContext:
+    return ApplicationContext.create_from(serialized)
