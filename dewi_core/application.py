@@ -1,8 +1,9 @@
-# Copyright 2015-2021 Laszlo Attila Toth
-# Distributed under the terms of the Apache License, Version 2.0
+#  Copyright 2015-2022, Laszlo Attila Toth
+#  Distributed under the terms of the Apache License, Version 2.0
 
 import os
 import sys
+import time
 import typing
 
 import click
@@ -18,6 +19,7 @@ from dewi_core.logger import LogLevel, LoggerConfig, create_logger_from_config, 
 from dewi_core.optioncontext import OptionContext
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
+from dewi_core.utils.time import humanize_time
 
 
 def _dummy():
@@ -83,30 +85,39 @@ def _print_exception(ctx: ApplicationContext, exc: BaseException):
     print(f'Exception: {exc} (type: {type(exc).__name__})', file=sys.stderr)
 
 
-class AppGroup(AliasedGroup):
-    def main(self, *args, **kwargs):
+def _app_main(parent_cls):
+    def app_main(self, *args, **kwargs):
+        start = end = 0
+
+        def print_run_time():
+            nonlocal end
+            end = time.time()
+            if os.environ.get('DEWI_SHOW_RUN_TIME', '0') == '1':
+                diff = int((end - start) * 100) / 100
+                print(f'Runtime: {humanize_time(end - start, format=True)} ({diff:2} seconds)')
+
+        start = time.time()
         try:
-            super().main(*args, **kwargs)
+            parent_cls.main(self, *args, **kwargs)
         except SystemExit:
+            print_run_time()
             _wait_for_termination_if_needed(self.callback.app_context)
             raise
         except BaseException as exc:
+            print_run_time()
             _print_exception(self.callback.app_context, exc)
-            _wait_for_termination_if_needed(self.callback.app_context)
-            sys.exit(1)
+        _wait_for_termination_if_needed(self.callback.app_context)
+        sys.exit(1)
+
+    return app_main
+
+
+class AppGroup(AliasedGroup):
+    main = _app_main(AliasedGroup)
 
 
 class AppCommand(click.Command):
-    def main(self, *args, **kwargs):
-        try:
-            super().main(*args, **kwargs)
-        except SystemExit:
-            _wait_for_termination_if_needed(self.callback.app_context)
-            raise
-        except BaseException as exc:
-            _print_exception(self.callback.app_context, exc)
-            _wait_for_termination_if_needed(self.callback.app_context)
-            sys.exit(1)
+    main = _app_main(click.Command)
 
 
 def get_invoked_subommand(ctx: click.Context):
