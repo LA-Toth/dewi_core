@@ -1,3 +1,15 @@
+5.1.0
+  - Application:
+      * add optional description parameter
+      * print cmd name if exception occurs during arg registration
+  - remoting: use click, too (remained as special case)
+  - OptionContext:
+      * add nestable groups
+      * add back the 'choices' option from argparse, replaced internally
+        in add_XXX methods
+      * required mutually excl groups: better error msg if an option is missing
+  - show runtime of the command at the end if env var set: DEWI_SHOW_RUN_TIME=1
+
 5.0.1
   - follow-up a change in pyyaml, CLoader may be Loader without C
   - small fix for Python 3.10 (collections -> collections.abc.Mapping)
