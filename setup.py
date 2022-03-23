@@ -6,7 +6,7 @@
 
 import sys
 
-if sys.hexversion < 0x03070000:
+if sys.hexversion < 0x03080000:
     raise RuntimeError("Required python version: 3.8 or newer (current: %s)" % sys.version)
 
 try:
@@ -30,7 +30,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: POSIX',
         'Operating System :: POSIX :: Linux',
