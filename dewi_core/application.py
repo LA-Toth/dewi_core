@@ -7,7 +7,6 @@ import time
 import typing
 
 import click
-from click._unicodefun import _verify_python_env
 
 from dewi_core.appcontext import ApplicationContext
 from dewi_core.command import Command
@@ -21,13 +20,17 @@ from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
 from dewi_core.utils.time import humanize_time
 
+try:
+    from click._unicodefun import _verify_python_env
 
-def _dummy():
+    def _dummy():
+        pass
+
+
+    # the UTF-8 check is buggy, ignore it
+    _verify_python_env.__code__ = _dummy.__code__
+except ImportError:
     pass
-
-
-# the UTF-8 check is buggy, ignore it
-_verify_python_env.__code__ = _dummy.__code__
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
