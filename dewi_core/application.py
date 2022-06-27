@@ -306,6 +306,9 @@ class Application:
 
             self._load_env()
 
+            if app_context.args.cwd:
+                os.chdir(app_context.args.cwd)
+
             if single_command_mode:
                 app_context.command_names.current = self._command_class.name
                 res = self._command_class().run(app_context)
