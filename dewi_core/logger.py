@@ -216,8 +216,8 @@ def set_global_logger_from_config(config: LoggerConfig) -> int:
             print('ERROR: none of: --log-file, --log-console, --log-syslog')
             return 1
 
-    global logger
-    logger = _create_logger_from_config(config)
+    global _logger
+    _logger = _create_logger_from_config(config)
 
     global _config
     if _config is None:
@@ -261,30 +261,30 @@ def create_logger_for_class(klass: typing.Type, module_name_part_count: int = 1)
 
 
 def log_debug(*args, **kwargs):
-    logger.debug(*args, **kwargs)
+    _logger.debug(*args, **kwargs)
 
 
 def log_info(*args, **kwargs):
-    logger.info(*args, **kwargs)
+    _logger.info(*args, **kwargs)
 
 
 def log_warning(*args, **kwargs):
-    logger.warning(*args, **kwargs)
+    _logger.warning(*args, **kwargs)
 
 
 def log_error(*args, **kwargs):
-    logger.error(*args, **kwargs)
+    _logger.error(*args, **kwargs)
 
 
 def log_critical(*args, **kwargs):
-    logger.critical(*args, **kwargs)
+    _logger.critical(*args, **kwargs)
 
 
 def log_enabled_for(level: LogLevel):
-    logger.enabled_for(level)
+    _logger.enabled_for(level)
 
 
 # NOTE: ensure that log_*() can be called without explicitly
 # calling create_logger()
-logger = create_null_logger('_main_')
+_logger = create_null_logger('_main_')
 _config: LoggerConfig = None
