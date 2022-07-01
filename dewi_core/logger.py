@@ -57,6 +57,9 @@ class LoggerConfig(Node):
         c.log_file = log_file
         return c
 
+    def duplicate_with_name(self, name: str) -> 'LoggerConfig':
+        return self.create(name, self.level, self.log_none, self.log_syslog, self.log_console, self.log_file)
+
 
 class _Handlers:
     CONSOLE_FORMAT = '%(asctime)s %(name)s %(levelname)s %(message)s'
@@ -166,28 +169,30 @@ class Logger:
         return self._logger.isEnabledFor(level.value)
 
 
-logger: Logger = None
-
-
 def create_logger(name: str, logger_types: typing.Union[LoggerType, typing.List[LoggerType]], log_level: str = 'info',
                   *,
                   filenames: typing.Optional[typing.List[str]] = None):
-    global logger  # pylint:disable=C0103
-
     if isinstance(logger_types, LoggerType):
         logger_types = [logger_types]
 
     logger = Logger(name, logger_types, filenames=filenames or [])
     logger.set_level(LogLevel.from_string(log_level))
+    return logger
 
 
-def create_logger_from_config(config: LoggerConfig) -> int:
+def create_null_logger(name: str) -> Logger:
+    logger = Logger(name, [LoggerType.NONE], filenames=[])
+    logger.set_level(LogLevel.INFO)
+    return logger
+
+
+def _create_logger_from_config(config: LoggerConfig) -> Logger:
     if config.log_none:
         if config.log_syslog or config.log_file or config.log_console:
-            print('ERROR: --log-none cannot be used any other log target,')
-            print('ERROR: none of: --log-file, --log-console, --log-syslog')
-            return 1
-        create_logger(config.name, LoggerType.NONE, config.level, filenames=[])
+            print('ERROR: log_none cannot be used any other log target,', file=sys.stderr)
+            print('ERROR: none of: log_file, --log_console, log_syslog', file=sys.stderr)
+            raise Exception("Invalid logger config")
+        return create_logger(config.name, LoggerType.NONE, config.level, filenames=[])
     else:
         logger_types = []
         if config.log_console:
@@ -201,9 +206,58 @@ def create_logger_from_config(config: LoggerConfig) -> int:
             # Using default logger
             logger_types = LoggerType.CONSOLE
 
-        create_logger(config.name, logger_types, config.level, filenames=config.log_file)
+        return create_logger(config.name, logger_types, config.level, filenames=config.log_file)
+
+
+def set_global_logger_from_config(config: LoggerConfig) -> int:
+    if config.log_none:
+        if config.log_syslog or config.log_file or config.log_console:
+            print('ERROR: --log-none cannot be used any other log target,')
+            print('ERROR: none of: --log-file, --log-console, --log-syslog')
+            return 1
+
+    global logger
+    logger = _create_logger_from_config(config)
+
+    global _config
+    if _config is None:
+        _config = config
 
     return 0
+
+
+def create_logger_based_on_global_config(name: str) -> Logger:
+    global _config
+    if _config is None:
+        return create_null_logger(name)
+    return _create_logger_from_config(_config.duplicate_with_name(name))
+
+
+def create_logger_for(obj: typing.Union[typing.Type, object], module_name_part_count: int = 1) -> Logger:
+    """Get a new logger from already initialized config; either for an object or for its __class__.
+    @see #get_logger_for_class()"""
+    return create_logger_for_class(
+        obj if isinstance(obj, type) else obj.__class__,
+        module_name_part_count)
+
+
+def create_logger_for_class(klass: typing.Type, module_name_part_count: int = 1) -> Logger:
+    """
+    Get a new logger for the specified `klass` type based on the previously stored config (first call
+    of create_logger_from_config()).
+    The module_name_part_count specifies the amount of the module name to be added; or none if it's 0.
+
+    Eg. m1.m2.m3.MyClass => cnt = 1: name m3.MyClass;
+    cnt: 2: m2.m3.MyClass
+    cnt: 3 or more : m1.m2.m3.MyClass
+    and if 0: MyClass
+    """
+    name = klass.__name__
+    if module_name_part_count:
+        name = '.'.join(klass.__module__
+                        .rsplit('.', module_name_part_count)[-module_name_part_count:]) \
+               + '.' + name
+    return create_logger_based_on_global_config(name)
 
 
 def log_debug(*args, **kwargs):
@@ -232,4 +286,5 @@ def log_enabled_for(level: LogLevel):
 
 # NOTE: ensure that log_*() can be called without explicitly
 # calling create_logger()
-create_logger('_main_', LoggerType.NONE, 'info')
+logger = create_null_logger('_main_')
+_config: LoggerConfig = None

@@ -14,7 +14,7 @@ from dewi_core.commandregistry import CommandRegistry
 from dewi_core.config.node import Node
 from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.loader import PluginLoader
-from dewi_core.logger import LogLevel, LoggerConfig, create_logger_from_config, log_debug
+from dewi_core.logger import LogLevel, LoggerConfig, set_global_logger_from_config, log_debug
 from dewi_core.optioncontext import OptionContext
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
@@ -428,7 +428,7 @@ class Application:
             ns.debug_ = True
 
     def _process_logging_options(self, args: Node):
-        return create_logger_from_config(
+        return set_global_logger_from_config(
             LoggerConfig.create(self._program_name, args.log_level, args.log_none, args.log_syslog, args.log_console,
                                 args.log_file))
 
