@@ -1,3 +1,9 @@
+5.2.0
+  - Fix application's --cwd parameter; change directory as needed
+  - Add support of multiple loggers based on the Application's logger config
+    using create_logger_for()
+  - global logger is '_logger', shouldn't be used directly
+
 5.1.1
   - Application: updated to work with click 8.1.0 (and also with 8.0.x).
 
