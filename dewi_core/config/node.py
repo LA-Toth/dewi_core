@@ -65,7 +65,7 @@ class Node(collections.abc.MutableMapping):
         return n
 
     @classmethod
-    def create_node(cls, **kwargs):
+    def create(cls, **kwargs):
         n = cls()
         is_sealed = n._sealed__
         n._seal()

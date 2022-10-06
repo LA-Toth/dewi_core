@@ -40,6 +40,7 @@ class TestCase(unittest.TestCase):
     assert_not_almost_equal = unittest.TestCase.assertNotAlmostEqual
     assert_not_equal = unittest.TestCase.assertNotEqual
     assert_not_in = unittest.TestCase.assertNotIn
+    assert_no_logs = unittest.TestCase.assertNoLogs
     assert_not_is_instance = unittest.TestCase.assertNotIsInstance
     assert_not_regex = unittest.TestCase.assertNotRegex
     assert_raises = unittest.TestCase.assertRaises
