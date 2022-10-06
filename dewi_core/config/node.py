@@ -55,13 +55,23 @@ class Node(collections.abc.MutableMapping):
     def __contains__(self, item):
         return item != self.SEALED_ATTR_NAME and item in self.__dict__
 
-    def load_from(self, data: dict):
-        load_node(self, data, sealed=self._sealed__)
+    def load_from(self, data: dict, *, raise_error: bool=False):
+        load_node(self, data, sealed=self._sealed__, raise_error=raise_error)
 
     @classmethod
     def create_from(cls, data: dict):
         n = cls()
         n.load_from(data)
+        return n
+
+    @classmethod
+    def create_node(cls, **kwargs):
+        n = cls()
+        is_sealed = n._sealed__
+        n._seal()
+        n.load_from(kwargs, raise_error=True)
+        if not is_sealed:
+            n._unseal()
         return n
 
 
@@ -81,12 +91,14 @@ class NodeList(list):
                 self.append(node)
 
 
-def load_node(node: Node, d: dict, *, sealed: bool = False):
+def load_node(node: Node, d: dict, *, sealed: bool = False, raise_error: bool =False):
     for key, value in d.items():
         if key in node and isinstance(node[key], (Node, NodeList)):
             node[key].load_from(value)
         elif key in node or not sealed:
             node[key] = value
+        elif raise_error:
+            raise KeyError(key)
 
 
 def represent_node(dumper: Dumper, data: Node):

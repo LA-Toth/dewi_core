@@ -96,3 +96,36 @@ class NodeAndNodeListTest(dewi_core.testcase.TestCase):
         self.tested['a-value'] = 44
         self.assert_equal(44, self.tested['a-value'])
         self.assert_equal(44, getattr(self.tested, 'a-value'))
+
+    def test_that_a_node_is_unsealed_initially(self):
+        class T(Node):
+            pass
+
+        self.assert_false(T._sealed__)
+
+    def test_that_sealed_node_cannot_be_extended(self):
+        self.tested._seal()
+        self.assert_not_in('as_member', self.tested)
+        with self.assert_raises(KeyError) as ctx:
+            self.tested.as_member = 123
+        self.assert_equal('as_member', ctx.exception.args[0])
+
+    def test_create_node_with_partial_args(self):
+        n = N1.create_node(x=1)
+        self.assert_equal(1, n.x)
+        self.assert_is_none(n.y)
+
+        n = N1.create_node(y=4)
+        self.assert_equal(0, n.x)
+        self.assert_equal(4, n.y)
+
+    def test_create_node_with_complete_arg_list(self):
+        n = N1.create_node(x=1, y=4)
+        self.assert_equal(1, n.x)
+        self.assert_equal(4, n.y)
+
+    def test_create_node_accepts_only_known_args(self):
+        with self.assert_raises(KeyError) as ctx:
+            N1.create_node(x=1, y=4, uknnown_member_name=6)
+
+        self.assert_equal('uknnown_member_name', ctx.exception.args[0])
