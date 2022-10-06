@@ -5,6 +5,7 @@ import enum
 import logging
 import logging.handlers
 import sys
+import threading
 import typing
 
 from dewi_core.config.node import Node
@@ -169,14 +170,28 @@ class Logger:
         return self._logger.isEnabledFor(level.value)
 
 
+_loggers: typing.Dict[str, Logger] = {}
+_loggers_lock = threading.Lock()
+
+
 def create_logger(name: str, logger_types: typing.Union[LoggerType, typing.List[LoggerType]], log_level: str = 'info',
                   *,
                   filenames: typing.Optional[typing.List[str]] = None):
     if isinstance(logger_types, LoggerType):
         logger_types = [logger_types]
 
-    logger = Logger(name, logger_types, filenames=filenames or [])
+    try:
+        _loggers_lock.acquire()
+        if name in _loggers:
+            return _loggers[name]
+
+        logger = Logger(name, logger_types, filenames=filenames or [])
+        _loggers[name] = logger
+    finally:
+        _loggers_lock.release()
+
     logger.set_level(LogLevel.from_string(log_level))
+
     return logger
 
 
