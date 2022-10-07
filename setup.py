@@ -18,8 +18,8 @@ except ImportError:
 setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
-    license="LGPLv3",
-    version="5.2.0",
+    license="Apache",
+    version="5.3.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",

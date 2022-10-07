@@ -1,3 +1,9 @@
+5.3.0
+  - Add Node.create() factory method
+  - TestCase: add lowercase alias method, assert_no_logs
+  - logger: ensure that a Logger with a specific name is created only once
+    to avoid log entry multiplication
+
 5.2.0
   - Fix application's --cwd parameter; change directory as needed
   - Add support of multiple loggers based on the Application's logger config
