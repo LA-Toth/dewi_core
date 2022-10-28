@@ -55,7 +55,7 @@ class Node(collections.abc.MutableMapping):
     def __contains__(self, item):
         return item != self.SEALED_ATTR_NAME and item in self.__dict__
 
-    def load_from(self, data: dict, *, raise_error: bool=False):
+    def load_from(self, data: dict, *, raise_error: bool = False):
         load_node(self, data, sealed=self._sealed__, raise_error=raise_error)
 
     @classmethod
@@ -91,12 +91,26 @@ class NodeList(list):
                 self.append(node)
 
 
-def load_node(node: Node, d: dict, *, sealed: bool = False, raise_error: bool =False):
+def load_node(node: Node, d: dict, *, sealed: bool = False, raise_error: bool = False):
     for key, value in d.items():
         if key in node and isinstance(node[key], (Node, NodeList)):
             node[key].load_from(value)
-        elif key in node or not sealed:
+        elif key in node:
             node[key] = value
+        elif not sealed:
+            if isinstance(value, dict):
+                node[key] = Node()
+                node[key].load_from(value)
+            elif isinstance(value, (list, tuple)):
+                if isinstance(value, tuple):
+                    value = list(value)
+                if value and isinstance(value[0], dict):
+                    node[key] = NodeList(Node)
+                    node[key].load_from(value)
+                else:
+                    node[key] = value
+            else:
+                node[key] = value
         elif raise_error:
             raise KeyError(key)
 
