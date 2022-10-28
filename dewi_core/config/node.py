@@ -1,8 +1,7 @@
-# Copyright 2017-2021 Laszlo Attila Toth
+# Copyright 2017-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import collections.abc
-import typing
 
 import yaml
 from yaml.dumper import Dumper
@@ -76,9 +75,11 @@ class Node(collections.abc.MutableMapping):
 
 
 class NodeList(list):
-    def __init__(self, member_type: typing.Type[Node]):
+    type_: type[Node]
+
+    def __init__(self, member_type: type[Node]):
         super().__init__()
-        self.type_: typing.Type[Node] = member_type
+        self.type_ = member_type
 
     def load_from(self, data: list):
         self.clear()

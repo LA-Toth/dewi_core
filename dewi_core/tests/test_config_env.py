@@ -1,12 +1,11 @@
-# Copyright 2021 Laszlo Attila Toth
+# Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os.path
-import typing
 
 import dewi_core.testcase
 from dewi_core.config_env import ConfigDirRegistry, EnvConfig, load_config_of_env
-from dewi_core.tests.common import test_env, DATA_DIR
+from dewi_core.tests.common import DATA_DIR, test_env
 
 
 class ConfigDirAndEnvTest(dewi_core.testcase.TestCase):
@@ -28,11 +27,11 @@ class ConfigDirAndEnvTest(dewi_core.testcase.TestCase):
         self._register_dir('dir3')
         self.assert_equal(3, len(self.config_dir_registry.config_directories))
 
-    def _asssert_env_after_load(self, expected_list: typing.List[str]):
+    def _asssert_env_after_load(self, expected_list: list[str]):
         self.config_dir_registry.load_env()
         self._asssert_env(expected_list)
 
-    def _asssert_env(self, expected_list: typing.List[str]):
+    def _asssert_env(self, expected_list: list[str]):
         self.assert_equal(expected_list, test_env.entries, 'Mismatching list of env strings in test_env')
 
     def test_initial_env_name_is_stored(self):
@@ -79,7 +78,7 @@ class ConfigDirAndEnvTest(dewi_core.testcase.TestCase):
         self.env_config.set_current_env('test')
         self._asssert_env_after_load(['dir1-common', 'dir2-common', 'dir2-test'])
 
-    def _assert_wrapper_method(self, directory: str, env_name: str, expected_list: typing.List[str]):
+    def _assert_wrapper_method(self, directory: str, env_name: str, expected_list: list[str]):
         test_env.reset_entries()
         path = os.path.join(DATA_DIR, 'cfgdirs', directory)
         load_config_of_env(path, env_name)

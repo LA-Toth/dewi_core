@@ -1,4 +1,4 @@
-# Copyright 2021 Laszlo Attila Toth
+# Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import importlib.util
@@ -12,7 +12,7 @@ class EnvConfig:
     def __init__(self, current_env: str):
         self._current_env = current_env
         self.available_envs = {'development', 'production'}
-        self._config_dir_to_envs_map: typing.Dict[str, typing.Set[str]] = {}
+        self._config_dir_to_envs_map: dict[str, typing.Set[str]] = {}
 
     @property
     def current_env(self):
@@ -54,7 +54,7 @@ class EnvConfig:
 class ConfigDirRegistry:
     def __init__(self, env_config: EnvConfig):
         self.env_config = env_config
-        self.config_directories: typing.List[str] = []
+        self.config_directories: list[str] = []
 
     def register_config_directory(self, directory: str):
         if directory in self.config_directories:
@@ -65,7 +65,7 @@ class ConfigDirRegistry:
         self.env_config.add_from_directory(directory)
         return True
 
-    def register_config_directories(self, directories: typing.List[str]):
+    def register_config_directories(self, directories: list[str]):
         for d in directories:
             self.register_config_directory(d)
 

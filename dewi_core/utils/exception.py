@@ -1,4 +1,4 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import sys
@@ -13,10 +13,10 @@ def print_backtrace(tbe: typing.Optional[traceback.TracebackException] = None):
 def format_backtrace(tbe: typing.Optional[traceback.TracebackException] = None) -> str:
     tbe = tbe or traceback.TracebackException(*sys.exc_info())
     return f'Exception occurred:\n  Type: {tbe.exc_type.__name__}\n  Message: {tbe}\n\n' \
-            + '* Details - First exception:\n' + _format_traceback_exception(tbe)
+           + '* Details - First exception:\n' + _format_traceback_exception(tbe)
 
 
-def _format_traceback_exception(exc: traceback.TracebackException, prefix: typing.Optional[str] = None):
+def _format_traceback_exception(exc: traceback.TracebackException, prefix: str | None = None):
     tb_str = ''
 
     if exc.__cause__ is not None:
@@ -30,7 +30,7 @@ def _format_traceback_exception(exc: traceback.TracebackException, prefix: typin
     return tb_str + _format_single_traceback(exc, prefix)
 
 
-def _format_single_traceback(exc: traceback.TracebackException, prefix: typing.Optional[str] = None):
+def _format_single_traceback(exc: traceback.TracebackException, prefix: str | None = None):
     tb_str = f'  Type: {exc.exc_type.__name__}\n  Message: {exc}\n\n'
     for tb in exc.stack:
         tb_str += '  File %s:%s in %s\n    %s\n' % (tb.filename, tb.lineno, tb.name, tb.line)

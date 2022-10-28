@@ -1,8 +1,7 @@
-# Copyright 2016-2021 Laszlo Attila Toth
+# Copyright 2016-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
-import collections
-import typing
+import collections.abc
 
 
 class _TypedDictionary(dict):
@@ -36,7 +35,7 @@ class DictionaryWithSet(_TypedDictionary):
         self[key].add(value)
 
 
-def sort_dict(d: typing.Mapping) -> collections.OrderedDict:
+def sort_dict(d: collections.abc.Mapping) -> collections.OrderedDict:
     result = collections.OrderedDict()
     for key in sorted(list(d.keys())):
         result[key] = d[key]

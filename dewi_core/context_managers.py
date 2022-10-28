@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Laszlo Attila Toth
+# Copyright 2016-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 import io
 import os
@@ -32,6 +32,9 @@ def redirect_outputs(stdout=None, stderr=None):
 
 def in_directory(directory: str):
     class InDirectory:
+        _old_directories: list[str]
+        _directory: str
+
         def __init__(self, directory: str):
             self._directory = directory
             self._old_directories = list()

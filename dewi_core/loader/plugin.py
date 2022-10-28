@@ -1,7 +1,7 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
-import typing
+import collections.abc
 
 from dewi_core.command import Command
 from dewi_core.loader.context import Context
@@ -12,14 +12,14 @@ class Plugin:
     A plugin is an extension of DEWI.
     """
 
-    def get_dependencies(self) -> typing.Iterable[str]:
+    def get_dependencies(self) -> collections.abc.Iterable[str]:
         return ()
 
     def load(self, c: Context):
         raise NotImplementedError
 
     @staticmethod
-    def _r(c: Context, t: typing.Type[Command]):
+    def _r(c: Context, t: type[Command]):
         """
         Registers a Command type into commommandregistry.
 

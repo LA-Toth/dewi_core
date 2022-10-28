@@ -1,8 +1,7 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os
-import typing
 
 from dewi_core.loader.context import Context
 from dewi_core.loader.plugin import Plugin
@@ -20,7 +19,7 @@ class EmptyPlugin(Plugin):
 class TestEnv:
 
     def __init__(self):
-        self.entries: typing.List[str] = []
+        self.entries: list[str] = []
 
     def add_entry(self, entry: str):
         self.entries.append(entry)

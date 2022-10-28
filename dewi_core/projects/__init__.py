@@ -1,3 +1,7 @@
+# Copyright 2021-2022 Laszlo Attila Toth
+# Distributed under the terms of the Apache License, Version 2.0
+
+import collections.abc
 import os
 import os.path
 import pathlib
@@ -59,7 +63,7 @@ class Project:
         return f'{self.src_dir}/{repo}'
 
     @property
-    def repositories(self) -> typing.Iterable[str]:
+    def repositories(self) -> collections.abc.Iterable[str]:
         for entry in os.listdir(self.src_dir):
             if os.path.exists(f'{self.repo_dir(entry)}/.git'):
                 yield entry
@@ -72,7 +76,7 @@ class Project:
     def custom_version(self) -> str:
         return self.config.get_or_default_value('core', 'custom_version', INITIAL_VERSION)
 
-    def as_dict(self) -> typing.Dict[str, typing.Any]:
+    def as_dict(self) -> dict[str, typing.Any]:
         return dict(
             name=self.name,
             branch=self.branch,
@@ -101,15 +105,15 @@ class ProjectUpdateError(ProjectError):
     pass
 
 
-def create_project(name: typing.Optional[str] = None) -> Project:
+def create_project(name: str | None = None) -> Project:
     return _create_project(name)
 
 
-def _create_project(name: typing.Optional[str] = None, *,
-                    branch: typing.Optional[str] = None,
-                    upstream_remote: typing.Optional[str] = None,
-                    upstream_branch: typing.Optional[str] = None,
-                    ticket_id: typing.Optional[str] = None) -> Project:
+def _create_project(name: str | None = None, *,
+                    branch: str | None = None,
+                    upstream_remote: str | None = None,
+                    upstream_branch: str | None = None,
+                    ticket_id: str | None = None) -> Project:
     project_dir = app_config().projectdir
     if not name or name == '.':
         fname = find_file_recursively(Project.CFG_FILE)
@@ -135,10 +139,10 @@ def create_project_with_details(name: str, *, branch: str, upstream_remote: str,
 
 
 def update_project(project_name: str, *,
-                   branch: typing.Optional[str] = None,
-                   upstream_remote: typing.Optional[str] = None,
-                   upstream_branch: typing.Optional[str] = None,
-                   ticket_id: typing.Optional[str] = None):
+                   branch: str | None = None,
+                   upstream_remote: str | None = None,
+                   upstream_branch: str | None = None,
+                   ticket_id: str | None = None):
     project_dir = f'{app_config().projectdir}/{project_name}'
     if not os.path.exists(os.path.join(project_dir, Project.CFG_FILE)):
         log_debug('Initial, still non-existing project config')
@@ -187,7 +191,7 @@ def update_project(project_name: str, *,
             core_version = new_core_version
 
 
-def _get_core_and_custom_version(project_dir: str) -> typing.Tuple[str, str]:
+def _get_core_and_custom_version(project_dir: str) -> tuple[str, str]:
     cfg = IniConfig()
     cfg.open(os.path.join(project_dir, Project.CFG_FILE))
     core_version = cfg.get('core', 'version')
@@ -230,10 +234,10 @@ class Updater:
 
 class DetailedUpdater(Updater):
     def __init__(self, project_dir: str, *,
-                 branch: typing.Optional[str] = None,
-                 upstream_remote: typing.Optional[str] = None,
-                 upstream_branch: typing.Optional[str] = None,
-                 ticket_id: typing.Optional[str] = None):
+                 branch: str | None = None,
+                 upstream_remote: str | None = None,
+                 upstream_branch: str | None = None,
+                 ticket_id: str | None = None):
         super().__init__(project_dir)
         self._name = os.path.basename(self._project_dir)
         self._branch = branch or ''
@@ -252,11 +256,11 @@ class NoopUpdater(Updater):
 
 class MultiUpdater(DetailedUpdater):
     def __init__(self, project_dir: str, *,
-                 branch: typing.Optional[str] = None,
-                 upstream_remote: typing.Optional[str] = None,
-                 upstream_branch: typing.Optional[str] = None,
-                 ticket_id: typing.Optional[str] = None,
-                 updaters: typing.List[typing.Type[Updater]]):
+                 branch: str | None = None,
+                 upstream_remote: str | None = None,
+                 upstream_branch: str | None = None,
+                 ticket_id: str | None = None,
+                 updaters: list[type[Updater]]):
         super().__init__(project_dir, branch=branch, upstream_remote=upstream_remote, upstream_branch=upstream_branch,
                          ticket_id=ticket_id)
         self._updaters = updaters
@@ -324,19 +328,19 @@ class ProjectUpdaterV2(Updater):
 #   core updater to v1, custom updater to v1, core updater to v2, custom to v2 and v3, core to v3, custom to v4 etc.
 # as each update can check the project's current state at that step and they may depend on a previous updater
 
-_registered_core_updaters: typing.Dict[str, typing.List[typing.Type[Updater]]] = {
+_registered_core_updaters: dict[str, list[type[Updater]]] = {
     ANY_VERSION: [],
     INITIAL_VERSION: [ProjectUpdaterV1],
     '1': [ProjectUpdaterV2],
 }
 
 # custom updaters based on core.custom_version field
-_registered_updaters: typing.Dict[str, typing.List[typing.Type[Updater]]] = {ANY_VERSION: [], INITIAL_VERSION: []}
+_registered_updaters: dict[str, list[type[Updater]]] = {ANY_VERSION: [], INITIAL_VERSION: []}
 
-_project_ext_type: typing.Optional[typing.Type[ProjectExtension]] = None
+_project_ext_type: type[ProjectExtension] | None = None
 
 
-def register_updater(version: str, updater: typing.Type[Updater]):
+def register_updater(version: str, updater: type[Updater]):
     global _registered_updaters
     if version not in _registered_updaters:
         _registered_updaters[version] = []
@@ -344,11 +348,11 @@ def register_updater(version: str, updater: typing.Type[Updater]):
     _registered_updaters[version].append(updater)
 
 
-def register_updater_to_all(updater: typing.Type[Updater]):
+def register_updater_to_all(updater: type[Updater]):
     _registered_updaters[ANY_VERSION].append(updater)
 
 
-def register_project_extension(ext: typing.Type[ProjectExtension]):
+def register_project_extension(ext: type[ProjectExtension]):
     global _project_ext_type
 
     _project_ext_type = ext

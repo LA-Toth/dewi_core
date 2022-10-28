@@ -1,14 +1,13 @@
-# Copyright 2009-2021 Laszlo Attila Toth
+# Copyright 2009-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 # vim: sts=4 ts=8 et ai
 
 import configparser
-import typing
 
 
 class DictConfigParser(configparser.RawConfigParser):
 
-    def as_dict(self) -> typing.Dict[str, typing.Dict[str, str]]:
+    def as_dict(self) -> dict[str, dict[str, str]]:
         d = dict(self._sections)
         for k in d:
             d[k] = dict(self._defaults, **d[k])
@@ -37,7 +36,7 @@ class IniConfig:
         else:
             return section
 
-    def open(self, cfgfile: str, /, *, merge: bool=False):
+    def open(self, cfgfile: str, /, *, merge: bool = False):
         if not merge:
             if self.config_file is not None:
                 raise IniConfigError("Already opened with " + self.config_file)
@@ -51,7 +50,7 @@ class IniConfig:
         self.loaded_files.append(cfgfile)
         self.parser.read(cfgfile, encoding='UTF-8')
 
-    def write(self, filename: typing.Optional[str] = None):
+    def write(self, filename: str | None = None):
         if filename:
             self.config_file = filename
         if self.config_file is None:
@@ -74,7 +73,7 @@ class IniConfig:
             self.parser.add_section(section)
         self.parser.set(section, option, value)
 
-    def get(self, section: str, option: str) -> typing.Optional[str]:
+    def get(self, section: str, option: str) -> str | None:
         section = self._section_from_dotted(section)
         if not self.parser.has_section(section):
             return None
@@ -95,17 +94,17 @@ class IniConfig:
             return
         self.parser.remove_option(section, option)
 
-    def get_options(self, section: str) -> typing.List[str]:
+    def get_options(self, section: str) -> list[str]:
         section = self._section_from_dotted(section)
         if not self.parser.has_section(section):
             return []
         else:
             return self.parser.options(section)
 
-    def get_sections(self) -> typing.List[str]:
+    def get_sections(self) -> list[str]:
         return [self._section_to_dotted(s) for s in self.parser.sections()]
 
-    def as_dict(self) -> typing.Dict[str, typing.Dict[str, str]]:
+    def as_dict(self) -> dict[str, dict[str, str]]:
         return self.parser.as_dict()
 
 

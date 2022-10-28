@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Laszlo Attila Toth
+# Copyright 2018-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import enum
@@ -6,7 +6,6 @@ import logging
 import logging.handlers
 import sys
 import threading
-import typing
 
 from dewi_core.config.node import Node
 from dewi_core.utils.dictionaries import sort_dict
@@ -38,17 +37,24 @@ class LogLevel(enum.Enum):
 
 
 class LoggerConfig(Node):
+    name: str
+    level: str
+    log_none: bool
+    log_syslog: bool
+    log_console: bool
+    log_file: list[str] | None
+
     def __init__(self):
-        self.name: str = ''
-        self.level: str = ''
-        self.log_none: bool = False
-        self.log_syslog: bool = False
-        self.log_console: bool = False
-        self.log_file: typing.Optional[typing.List[str]] = []
+        self.name = ''
+        self.level = ''
+        self.log_none = False
+        self.log_syslog = False
+        self.log_console = False
+        self.log_file = []
 
     @classmethod
     def create(cls, name: str, level: str, log_none: bool, log_syslog: bool, log_console: bool,
-               log_file: typing.Optional[typing.List[str]]):
+               log_file: list[str] | None):
         c = cls()
         c.name = name
         c.level = level
@@ -102,7 +108,7 @@ class _Handlers:
         return logging.NullHandler()
 
     @classmethod
-    def create_handler(cls, logger_type: LoggerType, *, filename: typing.Optional[str] = None):
+    def create_handler(cls, logger_type: LoggerType, *, filename: str | None = None):
         if logger_type == LoggerType.CONSOLE:
             return cls.create_console_handler()
         if logger_type == LoggerType.SYSLOG:
@@ -113,7 +119,7 @@ class _Handlers:
         return cls.create_null_handler()
 
 
-def _format_message(message: str, args: typing.Dict) -> str:
+def _format_message(message: str, args: dict) -> str:
     if not args:
         return message + ';'
 
@@ -128,7 +134,7 @@ class Logger:
 
     CRITICAL = logging.CRITICAL
 
-    def __init__(self, name: str, logger_types: typing.List[LoggerType], *, filenames: typing.List[str] = None):
+    def __init__(self, name: str, logger_types: list[LoggerType], *, filenames: list[str] = None):
         self._logger = logging.getLogger(name)
 
         if LoggerType.NONE in logger_types:
@@ -170,13 +176,13 @@ class Logger:
         return self._logger.isEnabledFor(level.value)
 
 
-_loggers: typing.Dict[str, Logger] = {}
+_loggers: dict[str, Logger] = {}
 _loggers_lock = threading.Lock()
 
 
-def create_logger(name: str, logger_types: typing.Union[LoggerType, typing.List[LoggerType]], log_level: str = 'info',
+def create_logger(name: str, logger_types: LoggerType | list[LoggerType], log_level: str = 'info',
                   *,
-                  filenames: typing.Optional[typing.List[str]] = None):
+                  filenames: list[str] | None = None):
     if isinstance(logger_types, LoggerType):
         logger_types = [logger_types]
 
@@ -248,7 +254,7 @@ def create_logger_based_on_global_config(name: str) -> Logger:
     return _create_logger_from_config(_config.duplicate_with_name(name))
 
 
-def create_logger_for(obj: typing.Union[typing.Type, object], module_name_part_count: int = 1) -> Logger:
+def create_logger_for(obj: type | object, module_name_part_count: int = 1) -> Logger:
     """Get a new logger from already initialized config; either for an object or for its __class__.
     @see #get_logger_for_class()"""
     return create_logger_for_class(
@@ -256,7 +262,7 @@ def create_logger_for(obj: typing.Union[typing.Type, object], module_name_part_c
         module_name_part_count)
 
 
-def create_logger_for_class(klass: typing.Type, module_name_part_count: int = 1) -> Logger:
+def create_logger_for_class(klass: type, module_name_part_count: int = 1) -> Logger:
     """
     Get a new logger for the specified `klass` type based on the previously stored config (first call
     of create_logger_from_config()).

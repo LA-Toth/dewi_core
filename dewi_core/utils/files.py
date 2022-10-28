@@ -1,10 +1,9 @@
-# Copyright 2019-2021 Laszlo Attila Toth
+# Copyright 2019-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 import os
-import typing
 
 
-def find_file_recursively(filename: str, directory_name: typing.Optional[str] = None) -> typing.Optional[str]:
+def find_file_recursively(filename: str, directory_name: str | None = None) -> str | None:
     """
     Searches a filename in directory_name directory or in current directory
     if directory_name is None, or in their parent directories if the filename file
@@ -17,7 +16,7 @@ def find_file_recursively(filename: str, directory_name: typing.Optional[str] = 
     :return: the absolute path of the searched file or None if it is not found
     """
 
-    def maybe_file(filename: str, directory_name: str) -> typing.Optional[str]:
+    def maybe_file(filename: str, directory_name: str) -> str | None:
         full_path = os.path.join(directory_name, filename)
         if os.path.exists(full_path):
             return full_path

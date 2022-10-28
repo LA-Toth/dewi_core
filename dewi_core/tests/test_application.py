@@ -1,9 +1,8 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os.path
 import re
-import typing
 from unittest.mock import patch
 
 import dewi_core.testcase
@@ -11,8 +10,8 @@ from dewi_core.appcontext import ApplicationContext
 from dewi_core.application import Application
 from dewi_core.command import Command
 from dewi_core.context_managers import redirect_outputs
-from dewi_core.tests.common import test_env, DATA_DIR
 from dewi_core.optioncontext import OptionContext
+from dewi_core.tests.common import DATA_DIR, test_env
 
 
 class FakeCommand(Command):
@@ -54,7 +53,7 @@ class InvokableApplicationTest(dewi_core.testcase.TestCase):
 
         return redirection
 
-    def assert_fake_command_run(self, prefix_args: typing.Optional[typing.List[str]] = None):
+    def assert_fake_command_run(self, prefix_args: list[str] | None = None):
         redirect = self._invoke_application_redirected(
             (prefix_args or []) + ['something', 'another'],
             expected_exit_value=42)
@@ -64,7 +63,7 @@ class InvokableApplicationTest(dewi_core.testcase.TestCase):
 
 
 class InvokableAppWithCommandTest(InvokableApplicationTest):
-    def assert_help_option(self, *, suffix: typing.Optional[str] = None):
+    def assert_help_option(self, *, suffix: str | None = None):
         suffix = suffix or '[OPTIONS] [ARGUMENTS]'
         redirect = self._invoke_application_redirected(['--help'], expected_exit_value=0)
         self.assert_in(f'{self.APP_NAME} {suffix}', redirect.stdout.getvalue())
@@ -203,11 +202,11 @@ class ApplicationWithEnvsTest(InvokableAppWithCommandTest):
         self._register_dir('dir2')
         self._register_dir('dir3')
 
-    def _asssert_env_after_run(self, expected_list: typing.List[str], env_name: str = None):
+    def _asssert_env_after_run(self, expected_list: list[str], env_name: str = None):
         self._invoke_application(['-e', env_name or 'foobar', 'fake'], expected_exit_value=42)
         self._asssert_env(expected_list)
 
-    def _asssert_env(self, expected_list: typing.List[str]):
+    def _asssert_env(self, expected_list: list[str]):
         self.assert_equal(expected_list, test_env.entries, 'Mismatching list of env strings in test_env')
 
     def test_all_env_with_name_foobar(self):

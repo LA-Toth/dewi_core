@@ -1,16 +1,15 @@
-# Copyright 2019-2021 Laszlo Attila Toth
+# Copyright 2019-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os.path
-import typing
 
 import dewi_core.testcase
 from dewi_core.utils.files import find_file_recursively
 
 
 class RecursiveFileSearchTest(dewi_core.testcase.TestCase):
-    def assert_recursive_file_equal(self, expected_subdir: typing.List[str], asset_subdir: typing.List[str]):
-        def abspath_from_partial(subdir: typing.List[str]):
+    def assert_recursive_file_equal(self, expected_subdir: list[str], asset_subdir: list[str]):
+        def abspath_from_partial(subdir: list[str]):
             return os.path.join(os.path.abspath(os.path.dirname(__file__)), 'assets', 'files', *subdir)
 
         expected_filename = os.path.join(abspath_from_partial(expected_subdir), 'search.txt')

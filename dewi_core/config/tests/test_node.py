@@ -1,7 +1,5 @@
-# Copyright 2018-2021 Laszlo Attila Toth
+# Copyright 2018-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
-
-import typing
 
 import yaml
 
@@ -10,16 +8,23 @@ from dewi_core.config.node import Node, NodeList
 
 
 class N1(Node):
+    x: int
+    y: int
+
     def __init__(self):
-        self.x: int = 0
-        self.y: int = None
+        self.x = 0
+        self.y = None
 
 
 class N2(Node):
+    list_of_n1s: list[N1]
+    title: str
+    count: int
+
     def __init__(self):
-        self.list_of_n1s: typing.List[N1] = NodeList(N1)
-        self.title: str = None
-        self.count: int = 100
+        self.list_of_n1s = NodeList(N1)
+        self.title = None
+        self.count = 100
 
 
 NODE_TEST_RESULT = """count: 100

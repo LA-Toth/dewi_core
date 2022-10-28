@@ -4,7 +4,6 @@
 import os
 import sys
 import time
-import typing
 
 import click
 
@@ -14,7 +13,7 @@ from dewi_core.commandregistry import CommandRegistry
 from dewi_core.config.node import Node
 from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.loader import PluginLoader
-from dewi_core.logger import LogLevel, LoggerConfig, set_global_logger_from_config, log_debug
+from dewi_core.logger import LogLevel, LoggerConfig, log_debug, set_global_logger_from_config
 from dewi_core.optioncontext import OptionContext
 from dewi_core.utils.exception import print_backtrace
 from dewi_core.utils.levenshtein import get_similar_names_to
@@ -22,6 +21,7 @@ from dewi_core.utils.time import humanize_time
 
 try:
     from click._unicodefun import _verify_python_env
+
 
     def _dummy():
         pass
@@ -130,7 +130,7 @@ def get_invoked_subommand(ctx: click.Context):
         return ctx.invoked_subcommand
 
 
-def get_command_from_plugin_appcontext(plugin_name: str, ctx: ApplicationContext) -> typing.Type[Command]:
+def get_command_from_plugin_appcontext(plugin_name: str, ctx: ApplicationContext) -> type[Command]:
     """
     Returns the command  class specified in the ctx ApplicationContext via its running_command_
     and running_subcommands_ members.
@@ -161,7 +161,7 @@ def get_command_from_plugin_appcontext(plugin_name: str, ctx: ApplicationContext
     return cmd_class
 
 
-def run_command_from_appcontext(plugin_name: str, ctx: ApplicationContext) -> typing.Optional[int]:
+def run_command_from_appcontext(plugin_name: str, ctx: ApplicationContext) -> int | None:
     """
     Runs the command returned by get_command_from_plugin_appcontext(). See that function.
     """
@@ -228,18 +228,28 @@ class _ListCommand(Command):
 
 
 class Application:
+    _program_name: str
+    _command_class: type[Command] | None
+    _description: str | None
+    _enable_short_debug_option: bool | None
+    _enable_env_options: bool | None
+    _version: str | None
+    _command_registry: CommandRegistry
+    _command_classes: set[type[Command]]
+    _env_config: EnvConfig
+    _config_dir_registry: ConfigDirRegistry
     DEFAULT_ENV = 'development'
 
     def __init__(self, program_name: str,
-                 command_class: typing.Optional[typing.Type[Command]] = None,
+                 command_class: type[Command] | None = None,
                  *,
-                 description: typing.Optional[str] = None,
+                 description: str | None = None,
                  enable_short_debug_option: bool = False,
                  enable_env_options: bool = True,
-                 version: typing.Optional[str] = None
+                 version: str | None = None
                  ):
         self._program_name = program_name
-        self._command_class: typing.Optional[typing.Type[Command]] = command_class
+        self._command_class = command_class
         self._description = description
         self._enable_short_debug_option = enable_short_debug_option if command_class is not None else True
         self._enable_env_options = enable_env_options if command_class is not None else True
@@ -253,18 +263,18 @@ class Application:
             self._command_classes.add(command_class)
             self._command_registry.register_class(command_class)
 
-    def add_command_class(self, command_class: typing.Type[Command]):
+    def add_command_class(self, command_class: type[Command]):
         self._command_classes.add(command_class)
         self._command_registry.register_class(command_class)
 
-    def add_command_classes(self, command_classes: typing.List[typing.Type[Command]]):
+    def add_command_classes(self, command_classes: list[type[Command]]):
         for command_class in command_classes:
             self.add_command_class(command_class)
 
     def load_plugin(self, name: str):
         self.load_plugins([name])
 
-    def load_plugins(self, names: typing.List[str]):
+    def load_plugins(self, names: list[str]):
         try:
             loader = PluginLoader(self._command_registry, self._config_dir_registry)
             loader.load(names)
@@ -275,10 +285,10 @@ class Application:
     def register_config_directory(self, directory: str):
         self.register_config_directories([directory])
 
-    def register_config_directories(self, directories: typing.List[str]):
+    def register_config_directories(self, directories: list[str]):
         self._config_dir_registry.register_config_directories(directories)
 
-    def run(self, args: typing.Optional[typing.List[str]] = None):
+    def run(self, args: list[str] | None = None):
         single_command_mode = bool(self._command_class and len(self._command_classes) == 1)
 
         app_context = ApplicationContext()

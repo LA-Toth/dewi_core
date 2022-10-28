@@ -1,8 +1,7 @@
-# Copyright 2020-2021 Laszlo Attila Toth
+# Copyright 2020-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os.path
-import typing
 
 from .iniconfig import IniConfig
 
@@ -39,7 +38,7 @@ class AppConfig(IniConfig):
 _config: AppConfig = None
 
 
-def get_config(path: typing.Optional[str] = None) -> AppConfig:
+def get_config(path: str | None = None) -> AppConfig:
     global _config
     if not _config:
         config = AppConfig()
@@ -49,6 +48,6 @@ def get_config(path: typing.Optional[str] = None) -> AppConfig:
     return _config
 
 
-def _set_config(cfg: typing.Optional[AppConfig]):
+def _set_config(cfg: AppConfig | None):
     global _config
     _config = cfg

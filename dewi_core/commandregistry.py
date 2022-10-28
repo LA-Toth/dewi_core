@@ -1,8 +1,7 @@
-# Copyright 2012-2021 Laszlo Attila Toth
+# Copyright 2012-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import sys
-import typing
 
 from dewi_core.command import Command
 
@@ -26,7 +25,7 @@ class ClassDescriptor:
     There is also a method that lets the class to be get - without instantiation of it.
     """
 
-    def get_class(self) -> typing.Type[Command]:
+    def get_class(self) -> type[Command]:
         raise NotImplementedError()
 
     def get_name(self):
@@ -43,7 +42,7 @@ class ClassDescriptorWithModuleAndClassName(ClassDescriptor):
         self._module_name = module_name
         self._class_name = class_name
 
-    def get_class(self) -> typing.Type[Command]:
+    def get_class(self) -> type[Command]:
         module = self._get_module_object()
         try:
             return getattr(module, self._class_name)
@@ -83,14 +82,14 @@ class ClassDescriptorWithConcreteClass(ClassDescriptor):
     This descriptor stores the class itself, mainly used for testing.
     """
 
-    def __init__(self, class_object: typing.Type[Command]):
+    def __init__(self, class_object: type[Command]):
         if not issubclass(class_object, Command):
             raise ClassIsNotSubclassOfCommand(
                 'The {} class is not subclass of dewi_core.command.Command'.format(class_object.__name__))
         super().__init__()
         self.class_object = class_object
 
-    def get_class(self) -> typing.Type[Command]:
+    def get_class(self) -> type[Command]:
         return self.class_object
 
     def get_name(self) -> str:
@@ -104,7 +103,7 @@ class CommandRegistry:
 
     def __init__(self):
         self._registry = dict()
-        self._command_classes: typing.List[typing.Type[Command]] = []
+        self._command_classes: list[type[Command]] = []
 
     def _validate_name_and_class_descriptor(self, name: str, class_descriptor: ClassDescriptor):
         if name in self._registry:
@@ -118,7 +117,7 @@ class CommandRegistry:
         self._validate_name_and_class_descriptor(name, class_descriptor)
         self._registry[name] = class_descriptor
 
-    def register_class(self, command_class: typing.Type[Command]):
+    def register_class(self, command_class: type[Command]):
         desc = ClassDescriptorWithConcreteClass(command_class)
         self.register_command_class(command_class.name, desc)
         for alias in command_class.aliases:
@@ -133,7 +132,7 @@ class CommandRegistry:
     def get_command_count(self) -> int:
         return len(self._registry)
 
-    def get_command_names(self) -> typing.List[str]:
+    def get_command_names(self) -> list[str]:
         return list(self._registry.keys())
 
     def __contains__(self, command_name: str) -> bool:

@@ -1,9 +1,8 @@
-# Copyright 2021 Laszlo Attila Toth
+# Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import os
 import re
-import typing
 
 from dewi_core.appcontext import ApplicationContext
 from dewi_core.command import Command
@@ -27,14 +26,14 @@ def register_global_args_in_review_cmd(c: OptionContext) -> None:
 
 
 class AutoReviewSubCommand(Command):
-    def run(self, ctx: ApplicationContext) -> typing.Optional[int]:
+    def run(self, ctx: ApplicationContext) -> int | None:
         # could prepare the repository
         print("Existing repo?: ", os.path.exists(ctx.commands_args['review'].gerrit_review_local_repo))
         self.args = ctx.args
         self.ctx = ctx
         return self._run()
 
-    def _run(self) -> typing.Optional[int]:
+    def _run(self) -> int | None:
         pass
 
 
@@ -52,7 +51,7 @@ class GerritChangeReviewer(AutoReviewSubCommand):
         c.add_option('--gerrit-revision', '--revision', 'revision', type=int,
                      required=True, help='Revision of the change in gerrit url')
 
-    def _run(self) -> typing.Optional[int]:
+    def _run(self) -> int | None:
         try:
             gerrit_host, change_id = self._validate_args()
         except ValueError as exc:
@@ -61,7 +60,7 @@ class GerritChangeReviewer(AutoReviewSubCommand):
         print('single change', gerrit_host, change_id, self.args.change_id, self.args.revision)
         return 0
 
-    def _validate_args(self) -> typing.Tuple[str, int]:
+    def _validate_args(self) -> tuple[str, int]:
         if self.args.change_id and not self.args.gerrit_url.endswith(f'/{self.args.change_id}'):
             raise ValueError('Unexpected change ID, differs from the one specified in Gerrit URL')
 
@@ -83,7 +82,7 @@ class GerritChangeChainReviewer(GerritChangeReviewer):
         # register own arguments
         c.add_option('-r', '--repo', 'gerrit_review_local_repo', help='Conflicts with parent command, should work')
 
-    def _run(self) -> typing.Optional[int]:
+    def _run(self) -> int | None:
         # process related changes to the specified one, as it contains the complete chain
         gerrit_host, change_id = self._validate_args()
         print('chain', gerrit_host, change_id, self.args.change_id, self.args.revision)

@@ -1,9 +1,8 @@
-# Copyright 2021 Laszlo Attila Toth
+# Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 import typing
 import weakref
-from typing import Optional, Type
 
 import click
 from click_option_group import GroupedOption, MutuallyExclusiveOptionGroup, OptionGroup, RequiredAllOptionGroup, \
@@ -12,7 +11,7 @@ from click_option_group import GroupedOption, MutuallyExclusiveOptionGroup, Opti
 
 class _OptionGroupMixin:
 
-    def given_option_with_count(self, ctx: click.Context, opts: dict) -> typing.Tuple[typing.Set[str], int, int]:
+    def given_option_with_count(self, ctx: click.Context, opts: dict) -> tuple[set[str], int, int]:
         option_names = set(self.get_option_names(ctx))
         given_option_names = option_names.intersection(opts)
         return given_option_names, len(given_option_names), len(option_names)
@@ -26,16 +25,16 @@ class _OptionGroupMixin:
 
 
 class _OptionGroup(OptionGroup, _OptionGroupMixin):
-    def __init__(self, name: typing.Optional[str] = None, *,
-                 hidden=False, help: Optional[str] = None, extgrp: '_ExtGroup' = None) -> None:
+    def __init__(self, name: str | None = None, *,
+                 hidden=False, help: str | None = None, extgrp: '_ExtGroup' = None) -> None:
         super().__init__(name, hidden=hidden, help=help)
         self._extgrp = extgrp
         extgrp._set_option_group(self)
 
 
 class _RequiredAllOptionGroup(RequiredAllOptionGroup, _OptionGroupMixin):
-    def __init__(self, name: typing.Optional[str] = None, *,
-                 hidden=False, help: Optional[str] = None, extgrp: '_ExtGroup' = None) -> None:
+    def __init__(self, name: str | None = None, *,
+                 hidden=False, help: str | None = None, extgrp: '_ExtGroup' = None) -> None:
         super().__init__(name, hidden=hidden, help=help)
         self._extgrp = extgrp
         extgrp._set_option_group(self)
@@ -66,8 +65,8 @@ class _RequiredAllOptionGroup(RequiredAllOptionGroup, _OptionGroupMixin):
 
 
 class _MutuallyExclusiveOptionGroup(MutuallyExclusiveOptionGroup, _OptionGroupMixin):
-    def __init__(self, name: typing.Optional[str] = None, *,
-                 hidden=False, help: Optional[str] = None, extgrp: '_ExtGroup' = None) -> None:
+    def __init__(self, name: str | None = None, *,
+                 hidden=False, help: str | None = None, extgrp: '_ExtGroup' = None) -> None:
         super().__init__(name, hidden=hidden, help=help)
         self._extgrp = extgrp
         extgrp._set_option_group(self)
@@ -112,14 +111,14 @@ class _MutuallyExclusiveOptionGroup(MutuallyExclusiveOptionGroup, _OptionGroupMi
 
 
 class _RequiredMutuallyExclusiveOptionGroup(MutuallyExclusiveOptionGroup, _OptionGroupMixin):
-    def __init__(self, name: typing.Optional[str] = None, *,
-                 hidden=False, help: Optional[str] = None, extgrp: '_ExtGroup' = None) -> None:
+    def __init__(self, name: str | None = None, *,
+                 hidden=False, help: str | None = None, extgrp: '_ExtGroup' = None) -> None:
         super().__init__(name, hidden=hidden, help=help)
         self._extgrp: _ExtGroup = extgrp
         extgrp._set_option_group(self)
 
     @property
-    def name_extra(self) -> typing.List[str]:
+    def name_extra(self) -> list[str]:
         return super().name_extra + ['required']
 
     def option_count_requirement_met(self, ctx: click.Context, opts: dict) -> bool:
@@ -165,8 +164,8 @@ class _RequiredMutuallyExclusiveOptionGroup(MutuallyExclusiveOptionGroup, _Optio
 
 class _Base:
     def __init__(self):
-        self._callbacks: typing.List[callable] = []
-        self._last_callbacks: typing.List[callable] = []
+        self._callbacks: list[callable] = []
+        self._last_callbacks: list[callable] = []
 
     def _add_option(self, decorator: callable, *args, **kwargs):
         if 'dest' in kwargs:
@@ -191,9 +190,9 @@ class _Base:
 
 
 class _Group(_Base):
-    def __init__(self, name: Optional[str] = None, *,
-                 help: Optional[str] = None,
-                 cls: Optional[Type[OptionGroup]] = None,
+    def __init__(self, name: str | None = None, *,
+                 help: str | None = None,
+                 cls: type[OptionGroup] | None = None,
                  **kwargs):
         super().__init__()
         self._cls = cls
@@ -208,9 +207,9 @@ class _Group(_Base):
 
 
 class _ExtGroup(_Group):
-    def __init__(self, name: Optional[str] = None, *,
-                 help: Optional[str] = None,
-                 cls: Optional[Type[OptionGroup]] = None,
+    def __init__(self, name: str | None = None, *,
+                 help: str | None = None,
+                 cls: type[OptionGroup] | None = None,
                  parent: typing.Optional['_ExtGroup'] = None):
         super().__init__(name, help=help, cls=cls, extgrp=self)
         self._parent = weakref.ref(parent) if parent else None
@@ -228,14 +227,14 @@ class _ExtGroup(_Group):
 
 
 class _ExtOptionGroup(_ExtGroup):
-    def __init__(self, name: Optional[str] = None, *,
-                 help: Optional[str] = None,
-                 cls: Optional[Type[OptionGroup]] = None,
-                 parent: typing.Optional['_ExtGroup'] = None):
+    def __init__(self, name: str | None = None, *,
+                 help: str | None = None,
+                 cls: type[OptionGroup] | None = None,
+                 parent: _ExtGroup | None = None):
         super().__init__(name, help=help, cls=cls, parent=parent)
 
-    def add_mutually_exclusive_group(self, name: Optional[str] = None, *,
-                                     help: Optional[str] = None,
+    def add_mutually_exclusive_group(self, name: str | None = None, *,
+                                     help: str | None = None,
                                      required: bool = False
                                      ) -> '_ExtMutuallyExclusiveGroup':
         if self._cls == _RequiredAllOptionGroup:
@@ -249,14 +248,14 @@ class _ExtOptionGroup(_ExtGroup):
 
 
 class _ExtMutuallyExclusiveGroup(_ExtGroup):
-    def __init__(self, name: Optional[str] = None, *,
-                 help: Optional[str] = None,
-                 cls: Optional[Type[OptionGroup]] = None,
-                 parent: typing.Optional['_ExtGroup'] = None):
+    def __init__(self, name: str | None = None, *,
+                 help: str | None = None,
+                 cls: type[OptionGroup] | None = None,
+                 parent: _ExtGroup | None = None):
         super().__init__(name, help=help, cls=cls, parent=parent)
 
-    def add_group(self, name: Optional[str] = None, *,
-                  help: Optional[str] = None, require_all=False) -> '_ExtOptionGroup':
+    def add_group(self, name: str | None = None, *,
+                  help: str | None = None, require_all=False) -> '_ExtOptionGroup':
         g = _ExtOptionGroup(name, help=help, cls=_RequiredAllOptionGroup if require_all else _OptionGroup, parent=self)
         self._last_callbacks.append(g)
         self._groups.append(g)
@@ -286,21 +285,21 @@ class OptionContext(_Base):
 
         self._callbacks.append(lambda: click.argument(*args, **kwargs))
 
-    def add_group(self, name: Optional[str] = None, *,
-                  help: Optional[str] = None,
-                  cls: Optional[Type[OptionGroup]] = None) -> _Group:
+    def add_group(self, name: str | None = None, *,
+                  help: str | None = None,
+                  cls: type[OptionGroup] | None = None) -> _Group:
         g = _Group(name, help=help, cls=cls)
         self._callbacks.append(g)
         return g
 
-    def add_multilevel_group(self, name: Optional[str] = None, *,
-                             help: Optional[str] = None, require_all=False) -> _ExtOptionGroup:
+    def add_multilevel_group(self, name: str | None = None, *,
+                             help: str | None = None, require_all=False) -> _ExtOptionGroup:
         g = _ExtOptionGroup(name, help=help, cls=_RequiredAllOptionGroup if require_all else _OptionGroup)
         self._callbacks.append(g)
         return g
 
-    def add_mutually_exclusive_group(self, name: Optional[str] = None, *,
-                                     help: Optional[str] = None,
+    def add_mutually_exclusive_group(self, name: str | None = None, *,
+                                     help: str | None = None,
                                      required: bool = False
                                      ) -> _ExtMutuallyExclusiveGroup:
         g = _ExtMutuallyExclusiveGroup(name, help=help,

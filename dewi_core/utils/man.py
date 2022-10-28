@@ -1,3 +1,6 @@
+# Copyright 2021-2022 Laszlo Attila Toth
+# Distributed under the terms of the Apache License, Version 2.0
+
 # vim: ts=8 sts=4 sw=4 et ai si
 import abc
 import argparse
@@ -6,7 +9,6 @@ import os
 import random
 import re
 import subprocess
-import typing
 
 from dewi_core.command import Command
 
@@ -14,7 +16,7 @@ XMLTO_XSL_DIR = os.path.join(os.path.dirname(__file__), 'xmlto_xsl')
 
 
 class GeneratorConfig:
-    def __init__(self, includes_dir: str, output_dir: str, app_name: str, *, app_version: typing.Optional[str] = None,
+    def __init__(self, includes_dir: str, output_dir: str, app_name: str, *, app_version: str | None = None,
                  section: int = 1):
         self.includes_dir = includes_dir
         self.output_dir = output_dir
@@ -190,7 +192,7 @@ class ManGeneratorConfigBase(abc.ABC):
 
 
 def print_man_page(config: GeneratorConfig, ns: argparse.Namespace):
-    cmd_class: typing.Type[Command] = ns.cmd_class_
+    cmd_class: type[Command] = ns.cmd_class_
     man_page_files = [(inspect.getfile(cmd_class), cmd_class.man_page_file)]
     name = ns.running_command_
     if 'running_subcommands_' in ns and ns.running_subcommands_:

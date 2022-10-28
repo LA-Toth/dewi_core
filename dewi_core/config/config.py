@@ -1,7 +1,5 @@
-# Copyright 2016-2021 Laszlo Attila Toth
+# Copyright 2016-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
-
-import typing
 
 import yaml
 
@@ -76,7 +74,7 @@ class Config:
         cfg, key = self._get_container_and_key(list_entry)
         del cfg[key]
 
-    def dump(self, file, ignore: typing.Optional[typing.List[str]] = None):
+    def dump(self, file, ignore: list[str] | None = None):
         cfg = self._config
         if ignore:
             cfg = dict(cfg)

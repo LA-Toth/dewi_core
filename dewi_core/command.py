@@ -1,7 +1,5 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
-
-import typing
 
 from dewi_core.appcontext import ApplicationContext
 from dewi_core.optioncontext import OptionContext
@@ -19,5 +17,5 @@ class Command:
         # can also be @classmethod
         pass
 
-    def run(self, ctx: ApplicationContext) -> typing.Optional[int]:
+    def run(self, ctx: ApplicationContext) -> int | None:
         pass

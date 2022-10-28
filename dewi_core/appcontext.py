@@ -1,28 +1,44 @@
-# Copyright 2021 Laszlo Attila Toth
+# Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
-
-import typing
 
 from dewi_core.config.node import Node
 
 
 class RunningCommandNames(Node):
+    current: str
+    invoked_subcommand: str | None
+    invoked_subcommand_primary_name: str | None
+    command: str
+    subcommands: list[str]
+    running_full_command: list[str]
+
     def __init__(self):
         # the name how current Command is called (which alias)
-        self.current: str = ''
+        self.current = ''
         # for the currently running command the invoked subcommand (eg. in the run() of ReviewCommand may be 'change')
-        self.invoked_subcommand: typing.Optional[str] = None
-        self.invoked_subcommand_primary_name: typing.Optional[str] = None
+        self.invoked_subcommand = None
+        self.invoked_subcommand_primary_name = None
         # top-level command name, in single command mode it's that command, otherwise first subcommand
-        self.command: str = ''
+        self.command = ''
         # both running_command and running_subcommands
-        self.subcommands: typing.List[str] = []
+        self.subcommands = []
         # both command and subcommands
-        self.running_full_command: typing.List[str] = []
+        self.running_full_command = []
         self._seal()
 
 
 class ApplicationContext(Node):
+    args: Node
+    commands_args: Node
+    current_args: Node
+    program_name: str
+    command_registry: 'CommandRegistry'
+    single_command_mode: bool
+    command_names: RunningCommandNames
+    config_directories: list[str]
+    environment: str
+    command_context: Node
+
     def __init__(self):
         from .commandregistry import CommandRegistry
         # args: similar to argparse.Namespace: a single mapping containing all options.
@@ -37,8 +53,8 @@ class ApplicationContext(Node):
         self.command_registry: CommandRegistry = None
         self.single_command_mode: bool = False
         self.command_names = RunningCommandNames()
-        self.config_directories: typing.List[str] = []
-        self.environment: str = ''
+        self.config_directories = []
+        self.environment = ''
         # A generic context for subcommands, may pass data to their subcommands
         self.command_context = Node()
         self._seal()
@@ -46,7 +62,7 @@ class ApplicationContext(Node):
     def add_arg(self, key: str, value):
         setattr(self.args, key, value)
 
-    def add_cmd_args(self, cmd: str, args: typing.Dict, single_cmd_name=None):
+    def add_cmd_args(self, cmd: str, args: dict, single_cmd_name=None):
         if cmd == '__main__':
             self.commands_args[cmd] = Node.create_from(args)
         if single_cmd_name:
