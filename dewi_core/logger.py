@@ -52,20 +52,10 @@ class LoggerConfig(Node):
         self.log_console = False
         self.log_file = []
 
-    @classmethod
-    def create(cls, name: str, level: str, log_none: bool, log_syslog: bool, log_console: bool,
-               log_file: list[str] | None):
-        c = cls()
-        c.name = name
-        c.level = level
-        c.log_none = log_none
-        c.log_syslog = log_syslog
-        c.log_console = log_console
-        c.log_file = log_file
-        return c
-
     def duplicate_with_name(self, name: str) -> 'LoggerConfig':
-        return self.create(name, self.level, self.log_none, self.log_syslog, self.log_console, self.log_file)
+        return self.create(name=name, level=self.level,
+                           log_none=self.log_none, log_syslog=self.log_syslog,
+                           log_console=self.log_console, log_file=self.log_file)
 
 
 class _Handlers:

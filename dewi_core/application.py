@@ -439,8 +439,9 @@ class Application:
 
     def _process_logging_options(self, args: Node):
         return set_global_logger_from_config(
-            LoggerConfig.create(self._program_name, args.log_level, args.log_none, args.log_syslog, args.log_console,
-                                args.log_file))
+            LoggerConfig.create(name=self._program_name, level=args.log_level,
+                                log_none=args.log_none, log_syslog=args.log_syslog,
+                                log_console=args.log_console, log_file=args.log_file))
 
     def _load_env(self):
         self._config_dir_registry.load_env()
