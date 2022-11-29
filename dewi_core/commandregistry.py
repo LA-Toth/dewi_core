@@ -58,7 +58,7 @@ class ClassDescriptorWithModuleAndClassName(ClassDescriptor):
 
 
 class ClassDescriptorWithModuleName(ClassDescriptorWithModuleAndClassName):
-    """The module and the class has the same name (the module's last part at least)"""
+    """The module and the class have the same name (the module's last part at least)"""
 
     def __init__(self, module_name: str):
         super().__init__(module_name, module_name.split('.')[-1])
@@ -69,7 +69,7 @@ class ClassDescriptorWithModuleName(ClassDescriptorWithModuleAndClassName):
 
 class ClassDescriptorWithModuleNameAndCommandClassMember(ClassDescriptorWithModuleAndClassName):
     """
-    The command is in a module that have specific layout, its __init__.py has commandlcass member. This member
+    The command is in a module that have specific layout, its __init__.py has commandclass member. This member
     stores the command class.
     """
 
@@ -97,9 +97,9 @@ class ClassDescriptorWithConcreteClass(ClassDescriptor):
 
 
 class CommandRegistry:
-    '''
+    """
     Registry of command classes
-    '''
+    """
 
     def __init__(self):
         self._registry = dict()
