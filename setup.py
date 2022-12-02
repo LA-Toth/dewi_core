@@ -15,7 +15,7 @@ setup(
     name="dewi_core",
     description="DEWI Core: Plugin and Config Tree framework and Application",
     license="Apache",
-    version="5.3.0",
+    version="5.4.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",

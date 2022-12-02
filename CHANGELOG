@@ -1,3 +1,10 @@
+5.4.0
+ - Node: load creates Node/NodeList if possible for unknown members
+ - Node.create() accepts only kwargs
+ - logger: use Node's create() method
+ - use type annotations w/o typing module, requires python 3.10+
+ - requires Python 3.10+
+
 5.3.0
   - Add Node.create() factory method
   - TestCase: add lowercase alias method, assert_no_logs
