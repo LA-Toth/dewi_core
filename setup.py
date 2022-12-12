@@ -46,6 +46,7 @@ setup(
     python_requires='>=3.10',
     packages=find_packages(exclude=['*tests*', 'pylintcheckers']),
     install_requires=[
+        'dewi-dataclass >=1.0.0,<2',
         'pyyaml',
         'click >=8.0, <9',
         'click_option_group',

@@ -1,5 +1,5 @@
 from dewi_core.config.config import Config
-from dewi_core.config.node import Node
+from dewi_dataclass.node import Node
 
 
 class Hardware(Node):

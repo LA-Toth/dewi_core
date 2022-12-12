@@ -1,9 +1,10 @@
 # Copyright 2021-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
-from dewi_core.config.node import Node
+from dewi_dataclass.node import Node, frozen
 
 
+@frozen
 class RunningCommandNames(Node):
     current: str
     invoked_subcommand: str | None
@@ -24,9 +25,9 @@ class RunningCommandNames(Node):
         self.subcommands = []
         # both command and subcommands
         self.running_full_command = []
-        self._seal()
 
 
+@frozen
 class ApplicationContext(Node):
     args: Node
     commands_args: Node
@@ -57,7 +58,6 @@ class ApplicationContext(Node):
         self.environment = ''
         # A generic context for subcommands, may pass data to their subcommands
         self.command_context = Node()
-        self._seal()
 
     def add_arg(self, key: str, value):
         setattr(self.args, key, value)

@@ -7,7 +7,7 @@ import logging.handlers
 import sys
 import threading
 
-from dewi_core.config.node import Node
+from dewi_dataclass.node import Node
 from dewi_core.utils.dictionaries import sort_dict
 
 

@@ -1,8 +1,8 @@
-# Copyright 2015-2021 Laszlo Attila Toth
+# Copyright 2015-2022 Laszlo Attila Toth
 # Distributed under the terms of the Apache License, Version 2.0
 
 from dewi_core.commandregistry import CommandRegistry
-from dewi_core.config.node import Node
+from dewi_dataclass.node import Node
 from dewi_core.config_env import ConfigDirRegistry
 
 

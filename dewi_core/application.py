@@ -10,7 +10,7 @@ import click
 from dewi_core.appcontext import ApplicationContext
 from dewi_core.command import Command
 from dewi_core.commandregistry import CommandRegistry
-from dewi_core.config.node import Node
+from dewi_dataclass.node import Node
 from dewi_core.config_env import ConfigDirRegistry, EnvConfig
 from dewi_core.loader.loader import PluginLoader
 from dewi_core.logger import LogLevel, LoggerConfig, log_debug, set_global_logger_from_config
