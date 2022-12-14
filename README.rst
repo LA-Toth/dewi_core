@@ -1,5 +1,5 @@
-DEWI core: A plugin and typesafe config tree framework
-======================================================
+DEWI core: An application framework
+===================================
 
 Name
 ----
@@ -12,17 +12,12 @@ original name, which stands for Developer's Work Area.
 Purpose
 -------
 
-This code is the minimal core part of DEWI_.
+This code is the core part of DEWI_.
 
-.. _DEWI: https://github.com/LA-Toth/DEWI
+.. _DEWI: https://github.com/LA-Toth/dewi
 
 The plugins ensure load codes dynamically, without loading everything.
 An application implementation is also added in ``MainApplication`` class.
-
-The other functionality is the config tree, which is a tree of MutableMapping nodes
-with further improvements.  The class is called as ``Node``. A generic helper
-class is also added called as ``config``.
-
 
 Installation
 ------------
@@ -72,15 +67,18 @@ Usage as a regular Python library
 ---------------------------------
 
 Some parts of DEWI can be used as regular Python library, without the Plugin
-boilerplate. A simple example is creating a somewhat typesafe (config) tree:
+boilerplate. A simple example is creating a somewhat typesafe (config) tree
+with the help of the now extracted dewi_dataclass_:
+
+.. _dewi_dataclass: _DEWI: https://github.com/LA-Toth/dewi_dataclass
 
 .. code-block:: python
 
     from dewi_core.config.config import Config
-    from dewi_core.config.node import Node
+    from dewi_dataclass import DataClass
 
 
-    class Hardware(Node):
+    class Hardware(DataClass):
         def __init__(self):
             self.hw_type: str = ''
             self.mem_size: int = None
@@ -88,7 +86,7 @@ boilerplate. A simple example is creating a somewhat typesafe (config) tree:
             self.mem_mapped: int = None
 
 
-    class MainNode(Node):
+    class MainNode(DataClass):
         def __init__(self):
             # Handling as str, but None is used as unset
             self.version: str = None
