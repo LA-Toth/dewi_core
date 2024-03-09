@@ -13,9 +13,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="dewi_core",
-    description="DEWI Core: Plugin and Config Tree framework and Application",
+    description="DEWI Core: An Application Framework",
     license="Apache",
-    version="5.4.0",
+    version="6.0.0",
     author="Laszlo Attila Toth",
     author_email="python-dewi@laszloattilatoth.me",
     maintainer="Laszlo Attila Toth",

@@ -1,3 +1,9 @@
+6.0.0
+ - Remove Node, NodeList classes from the package
+ - Use dewi-dataclass package with changed class name / functionality
+   named as DataClass, DataList
+ - Updated README
+
 5.4.0
  - Node: load creates Node/NodeList if possible for unknown members
  - Node.create() accepts only kwargs
