@@ -59,13 +59,21 @@ class Config:
         cfg[key].add(value)
 
     def get(self, entry: str):
+        """
+        The value at a dotted path, or None if the path does not exist.
+
+        Both exception types have to be caught: a plain dict raises KeyError
+        for a missing key, while a Node raises AttributeError -- and a config
+        tree routinely mixes the two, since a Node may hold plain dicts and a
+        dict may hold Nodes.
+        """
         keys = entry.split('.')
         cfg = self._config
 
         try:
             for key in keys:
                 cfg = cfg[key]
-        except KeyError:
+        except (KeyError, AttributeError):
             return None
 
         return cfg

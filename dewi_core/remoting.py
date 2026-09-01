@@ -9,7 +9,7 @@ from dewi_core.appcontext import ApplicationContext
 
 def serialize_application_context(ctx: ApplicationContext) \
         -> dict[str, typing.Any]:
-    return copy.deepcopy({k: v for k, v in ctx if k != 'command_registry'})
+    return copy.deepcopy({k: v for k, v in ctx.items() if k != 'command_registry'})
 
 
 def deserialize_application_context(serialized: dict[str, typing.Any]) -> ApplicationContext:
