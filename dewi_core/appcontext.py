@@ -33,7 +33,7 @@ class ApplicationContext(Node):
     commands_args: Node
     current_args: Node
     program_name: str
-    command_registry: 'CommandRegistry'
+    command_registry: 'CommandRegistry | None'
     single_command_mode: bool
     command_names: RunningCommandNames
     config_directories: list[str]
@@ -51,8 +51,8 @@ class ApplicationContext(Node):
         self.commands_args = Node()
         self.current_args = Node()
         self.program_name = ''
-        self.command_registry: CommandRegistry = None
-        self.single_command_mode: bool = False
+        self.command_registry = None
+        self.single_command_mode = False
         self.command_names = RunningCommandNames()
         self.config_directories = []
         self.environment = ''

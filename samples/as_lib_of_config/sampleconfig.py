@@ -3,17 +3,24 @@ from dewi_dataclass.node import Node
 
 
 class Hardware(Node):
+    mem_size: int | None
+    mem_free: int | None
+    mem_mapped: int | None
+    hw_type: str
+
     def __init__(self):
-        self.hw_type: str = ''
-        self.mem_size: int = None
-        self.mem_free: int = None
-        self.mem_mapped: int = None
+        self.hw_type = ''
+        self.mem_size = None
+        self.mem_free = None
+        self.mem_mapped = None
 
 
 class MainNode(Node):
+    version: str | None
+
     def __init__(self):
         # Handling as str, but None is used as unset
-        self.version: str = None
+        self.version = None
         self.hw = Hardware()
         # ... further fields
 
