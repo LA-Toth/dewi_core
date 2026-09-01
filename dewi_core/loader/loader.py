@@ -49,7 +49,7 @@ class PluginLoader:
             module_name, class_name = name.rsplit('.', 1)
             module = importlib.import_module(module_name)
         except (ImportError, ValueError) as exc:
-            raise PluginLoaderError(f"Plugin '{name}' is not found or cannot be imported; error='{exc}'")
+            raise PluginLoaderError(f"Plugin '{name}' is not found or cannot be imported; error='{exc}'") from exc
 
         try:
             plugin_class = getattr(module, class_name)
