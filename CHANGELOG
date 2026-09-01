@@ -1,3 +1,32 @@
+6.3.0
+ - context is added back for commands as ApplicationContext.plugin_context,
+   so plugins can share state and it can be visible in commands
+ - PluginLoader.load() takes an optional context, so repeated calls can
+   accumulate into one. Omitting it makes a new one, as before.
+ - a command with subcommands given to Application is now fully supported as
+   the application itself: `list` and `list-all` exist in that mode too,
+   if needed: app.run(..., add_command_listing_to_single_cmd=True)
+ - a sample under dewi_core/commands/sharedconfig showing the above: a plugin
+   sharing a configuration with its commands, registering an accessor rather
+   than the loaded value so that a long-running session follows an edit of the
+   file.
+ - fix serialize_application_context()
+ - fix Config.get(): it caught only KeyError, so a missing path returned
+   None inside a plain dict but raised AttributeError inside a Node. A
+ - tests: dewi_core.utils.yaml, dewi_core.config.config, remoting and the
+   small utils (time, files, log_dict, dictionaries) were untested;
+   config.config and remoting were at 53% and 0%. Coverage 65% -> 71%, with
+   those modules now at 100% apart from yaml's import-time fallbacks.
+ - dewi_core/utils/tests/ had no __init__.py, so it only worked as a
+   namespace package.
+ - packaging: setup.py replaced by pyproject.toml (PEP 517/518/621).
+ - data classes: the `self.x: T = value` style inside __init__ recorded no
+   annotation -- Python does not store annotations on attribute targets -- so
+   the members were invisible to `in`, to dewi_dataclass.fields(), and to
+   @frozen. The annotations moved to class level; __init__ keeps a plain
+   assignment. Where the default is None the annotation now says `T | None`,
+   which is what it always meant.
+
 6.0.0
  - Remove Node, NodeList classes from the package
  - Use dewi-dataclass package with changed class name / functionality
