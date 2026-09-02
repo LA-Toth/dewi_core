@@ -92,17 +92,19 @@ class SharedConfigTest(_WithConfigFile):
         shared = SharedConfig(path)
         self.assert_equal('first', shared.get()['greeting'])
 
-        os.utime(path, (0, 0))                      # a different timestamp
         self.config_file({'greeting': 'second'})
+        os.utime(path, (0, 0))                      # a different timestamp
 
         self.assert_equal('second', shared.get()['greeting'])
+
 
     def test_that_a_reload_counts_as_a_second_read(self):
         path = self.config_file({'greeting': 'first'})
         shared = SharedConfig(path)
         shared.get()
-        os.utime(path, (0, 0))
+
         self.config_file({'greeting': 'second'})
+        os.utime(path, (0, 0))                      # a different timestamp
         shared.get()
 
         self.assert_equal(2, shared.load_count)
