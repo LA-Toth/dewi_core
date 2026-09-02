@@ -20,7 +20,16 @@ class PluginLoader:
         self._command_registry = command_registry
         self._config_dir_registry = config_dir_registry
 
-    def load(self, plugin_names: typing.Iterable[str]) -> Context:
+    def load(self, plugin_names: typing.Iterable[str], context: Context | None = None) -> Context:
+        """
+        Load these plugins and the plugins they depend on.
+
+        :param plugin_names: dotted names of the plugins to load
+        :param context: the context to load them into; a new one is made when
+            omitted. Passing one lets several load() calls share it, so a
+            plugin loaded later can see what an earlier one registered.
+        :return: the context the plugins were loaded into
+        """
         dependency_graph = {}
         for name in plugin_names:
             plugin = self._get_plugin(name)
@@ -32,7 +41,9 @@ class PluginLoader:
         visited_list = []
         self._build_dependency_list(dependency_graph, visited_list, dependency_list, dependency_graph.keys())
 
-        context = Context(self._command_registry, self._config_dir_registry)
+        if context is None:
+            context = Context(self._command_registry, self._config_dir_registry)
+
         for plugin_name in dependency_list:
             self._get_plugin(plugin_name).load(context)
 

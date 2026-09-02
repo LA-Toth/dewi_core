@@ -258,6 +258,9 @@ class Application:
         self._command_classes = set()
         self._env_config = EnvConfig(os.environ.get('DEWI_ENV', self.DEFAULT_ENV))
         self._config_dir_registry = ConfigDirRegistry(self._env_config)
+        # What the loaded plugins registered; published as
+        # ApplicationContext.plugin_context so commands can read it.
+        self._plugin_context = None
 
         if command_class:
             self._command_classes.add(command_class)
@@ -277,7 +280,10 @@ class Application:
     def load_plugins(self, names: list[str]):
         try:
             loader = PluginLoader(self._command_registry, self._config_dir_registry)
-            loader.load(names)
+            # The context is kept, not dropped: whatever a plugin registers
+            # while loading is what the commands then read from
+            # ctx.plugin_context. Repeated calls accumulate into the same one.
+            self._plugin_context = loader.load(names, self._plugin_context)
         except BaseException as exc:
             _print_exception(ApplicationContext(), exc)
             sys.exit(1)
@@ -295,6 +301,7 @@ class Application:
         app_context.single_command_mode = single_command_mode
         app_context.config_directories = list(self._config_dir_registry.config_directories)
         app_context.environment = self._env_config.current_env
+        app_context.plugin_context = self._plugin_context
 
         @click.pass_context
         def app_run(ctx: click.Context, *args, **kwargs):
@@ -349,7 +356,22 @@ class Application:
                 help=self._description or self._command_class.description,
                 context_settings=CONTEXT_SETTINGS,
                 cls=(AppGroup if has_classes else AppCommand))(app_run)
-            self._register_subcommands(self._command_class.subcommand_classes, app_run, app_context)
+
+            subcommands = list(self._command_class.subcommand_classes)
+            if has_classes:
+                # A command that owns subcommands is the application: the
+                # commands available in it are its subcommands, so they are
+                # what `list` shows and what an unknown name is compared
+                # against -- not the one command that owns them.
+                self._command_registry = CommandRegistry()
+                for subcommand_class in subcommands:
+                    self._command_registry.register_class(subcommand_class)
+
+                self._command_registry.register_class(_ListAllCommand)
+                self._command_registry.register_class(_ListCommand)
+                subcommands += [_ListAllCommand, _ListCommand]
+
+            self._register_subcommands(subcommands, app_run, app_context)
         else:
             self._command_registry.register_class(_ListAllCommand)
             self._command_registry.register_class(_ListCommand)

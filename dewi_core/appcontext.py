@@ -3,6 +3,9 @@
 
 from dewi_dataclass.node import Node, frozen
 
+if False:  # noqa: for the annotation only, without a circular import
+    from dewi_core.loader.context import Context
+
 
 @frozen
 class RunningCommandNames(Node):
@@ -39,6 +42,7 @@ class ApplicationContext(Node):
     config_directories: list[str]
     environment: str
     command_context: Node
+    plugin_context: 'Context | None'
 
     def __init__(self):
         from .commandregistry import CommandRegistry
@@ -58,6 +62,9 @@ class ApplicationContext(Node):
         self.environment = ''
         # A generic context for subcommands, may pass data to their subcommands
         self.command_context = Node()
+        # What the plugins registered while loading: see Plugin.load() and
+        # dewi_core.loader.context.Context. None when no plugin was loaded.
+        self.plugin_context = None
 
     def add_arg(self, key: str, value):
         setattr(self.args, key, value)
