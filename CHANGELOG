@@ -1,4 +1,7 @@
-6.3.0
+6.1.1
+  - fix incorrect versions in CHANGELOG and pyproject.toml
+
+6.1.0
  - context is added back for commands as ApplicationContext.plugin_context,
    so plugins can share state and it can be visible in commands
  - PluginLoader.load() takes an optional context, so repeated calls can

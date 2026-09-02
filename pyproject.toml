@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dewi_core"
-version = "6.1.0"
+version = "6.1.1"
 description = "DEWI Core: An Application Framework"
 readme = "README.rst"
 requires-python = ">=3.10"
@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "dewi-dataclass >=2.2.0,<3",
+    "dewi-dataclass >=2.0.0,<3",
     "pyyaml",
     "click >=8.0, <9",
     "click_option_group",
