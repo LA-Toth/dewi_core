@@ -294,7 +294,7 @@ class Application:
     def register_config_directories(self, directories: list[str]):
         self._config_dir_registry.register_config_directories(directories)
 
-    def run(self, args: list[str] | None = None):
+    def run(self, args: list[str] | None = None, /, add_command_listing_to_single_cmd: bool = False):
         single_command_mode = bool(self._command_class and len(self._command_classes) == 1)
 
         app_context = ApplicationContext()
@@ -367,9 +367,10 @@ class Application:
                 for subcommand_class in subcommands:
                     self._command_registry.register_class(subcommand_class)
 
-                self._command_registry.register_class(_ListAllCommand)
-                self._command_registry.register_class(_ListCommand)
-                subcommands += [_ListAllCommand, _ListCommand]
+                if add_command_listing_to_single_cmd:
+                    self._command_registry.register_class(_ListAllCommand)
+                    self._command_registry.register_class(_ListCommand)
+                    subcommands += [_ListAllCommand, _ListCommand]
 
             self._register_subcommands(subcommands, app_run, app_context)
         else:
