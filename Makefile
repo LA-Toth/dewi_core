@@ -16,7 +16,7 @@ check: cs tests
 .PHONY: tests
 tests:
 	@echo Running Python unit tests
-	$(NOSE) -s $(NOSE_TEST_PATHS)
+	$(PYTEST) $(TEST_PATHS)
 
 .PHONY: cs
 cs: pep8 pylint
@@ -59,7 +59,7 @@ coverage: cov cov-html
 
 .PHONY: cov
 cov:
-	$(COVERAGE) run -m nose -s $(NOSE_TEST_PATHS)
+	$(COVERAGE) run -m pytest $(TEST_PATHS)
 
 .PHONY: cov-html
 cov-html:

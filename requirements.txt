@@ -1,6 +1,6 @@
 click
 click_option_group
 coverage
-nose
+pytest
 pylint
 pyyaml
