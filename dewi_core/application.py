@@ -441,7 +441,7 @@ class Application:
                               f'under ({"/".join(sorted(self._env_config.available_envs))})')
 
         logging = h.add_group('Logging')
-        logging.add_option('--log-level', dest='log_level', help='Set log level, default: warning',
+        logging.add_option('--log-level', dest='log_level', help='Set log level, default: info',
                            type=click.Choice([i.name.lower() for i in LogLevel]), default='info')
         logging.add_option('--log-syslog', dest='log_syslog', is_flag=True,
                            help='Log to syslog. Can be combined with other log targets')
